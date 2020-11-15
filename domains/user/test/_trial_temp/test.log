@@ -1,0 +1,2 @@
+2020-11-15 15:49:41+0800 [-] Log opened.
+2020-11-15 15:49:41+0800 [-] C:\Users\ºÎ¼Ò¶°\AppData\Roaming\Python\Python36\site-packages\pymysql\cursors.py:170: pymysql.err.Warning: (1366, "Incorrect string value: '\\xD6\\xD0\\xB9\\xFA\\xB1\\xEA...' for column 'VARIABLE_VALUE' at row 1")
