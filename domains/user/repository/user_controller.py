@@ -11,9 +11,11 @@ class UserController(object):
     def __init__(self, session: Session):
         self.session = session
 
-    def get_users(self, id: int=None, name: str=None, phone: int=None, email:str=None, offset: int=None, limit: int=None,
+    def get_users(self, key: str = None,id: int = None, name: str = None, phone: int = None, email:str = None, offset: int=None, limit: int=None,
                   user_type: UserType = UserType.Formal, disable: UserDisable = UserDisable.able, level: int = 0) -> List[User]:
         query = self.session.query(User).filter(User.type == user_type.value, User.disable == disable.value)
+        if key:
+            query = query.filter(User.key == key)
         if id:
             query = query.filter(User.id == id)
         if phone:
@@ -79,9 +81,9 @@ class UserController(object):
             return False
         return True
 
-    def create_user(self, name: str, phone: int, email:str,
+    def create_user(self, name: str, phone: int, email:str, key:str,
                     user_type: UserType = UserType.Formal, disable: UserDisable = UserDisable.able, level: int = 0) -> User:
-        user = User(name=name, phone=phone, email=email, type=user_type.value, disable=disable.value, level=level)
+        user = User(key=key, name=name, phone=phone, email=email, type=user_type.value, disable=disable.value, level=level)
         try:
             self.session.add(user)
             self.session.commit()

@@ -13,4 +13,5 @@ class User(Base):
     email = Column(VARCHAR(255))
     disable = Column(INTEGER)
     level = Column(INTEGER, nullable=False)
+    key = Column(VARCHAR(255), nullable=False)
 

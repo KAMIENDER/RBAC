@@ -20,13 +20,13 @@ class test_controller(TestCase):
 
     def tearDown(self):
         self.session.close()
-        # self.trans.rollback()
+        self.trans.rollback()
         self.connection.close()
 
     def test_user_controller(self):
         user_controller = get_user_controller(session=self.session)
-        new_user = user_controller.create_user(name='tesfsdft', phone=1, email='test')
+        new_user = user_controller.create_user(name='tesfsdft', phone=1, email='test', key='test')
         users = user_controller.get_users(name='tesfsdft', phone=1, email='test')
         for user in users:
-            assert user == user
+            assert new_user == user
         return
