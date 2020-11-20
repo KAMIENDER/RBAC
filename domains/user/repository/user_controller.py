@@ -26,25 +26,28 @@ class UserController(object):
             query = query.limit(limit)
         if level:
             query = query.filter(User.level == level)
-        users = query.all()
+        try:
+            users = query.all()
 
-        if name:
-            temp_users = list()
-            for user in users:
-                if name in user.name:
-                    temp_users.append(user)
-            users = temp_users
+            if name:
+                temp_users = list()
+                for user in users:
+                    if name in user.name:
+                        temp_users.append(user)
+                users = temp_users
 
-        if email:
-            temp_users = list()
-            for user in users:
-                if email in user.email:
-                    temp_users.append(user)
-            users = temp_users
-
+            if email:
+                temp_users = list()
+                for user in users:
+                    if email in user.email:
+                        temp_users.append(user)
+                users = temp_users
+        except Exception as e:
+            logging.error(f"get users fail: {e}")
+            return list()
         return users
 
-    def update_user(self, user: User, name: str, phone: int, email:str,
+    def update_user(self, user: User, name: str=None, phone: int=None, email:str=None,
                   user_type: UserType = UserType.Formal, level: int = 0) -> bool:
         if name:
             user.name = name

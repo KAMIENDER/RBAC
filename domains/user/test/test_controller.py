@@ -1,4 +1,3 @@
-import logging
 import os
 import sys
 from unittest import TestCase
@@ -11,7 +10,8 @@ from sqlalchemy import create_engine
 engine = create_engine('mysql+mysqlconnector://root:root@localhost:3306/rbac')
 session = sessionmaker()
 
-class test_controller(TestCase):
+
+class TestUserController(TestCase):
     def setUp(self):
         self.connection = engine.connect()
         self.trans = self.connection.begin()
@@ -27,6 +27,11 @@ class test_controller(TestCase):
         user_controller = get_user_controller(session=self.session)
         new_user = user_controller.create_user(name='tesfsdft', phone=1, email='test', key='test')
         users = user_controller.get_users(name='tesfsdft', phone=1, email='test')
+        for user in users:
+            assert new_user == user
+        result = user_controller.update_user(new_user, name='fdsfsfdsfsfsdf')
+        assert result == True
+        users = user_controller.get_users(name='fdsfsfdsfsfsdf', phone=1, email='test', limit=1)
         for user in users:
             assert new_user == user
         return
