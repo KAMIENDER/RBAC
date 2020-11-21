@@ -18,6 +18,11 @@ def create_role(key: str, extra: str = None) -> Item:
     return item
 
 
+def creat_permission(key: str, extra: str = None) -> Item:
+    item = item_controller.create_item(key=key, item_type=ItemType.permission, extra=extra)
+    return item
+
+
 def get_roles_member_keys(role_keys: List[str]) -> Dict[str, List[str]]:
     role_items = item_controller.get_items(item_type=ItemType.role, keys=role_keys)
     role_user_refs = item_controller.get_item_refs(main_items=role_items)
@@ -129,3 +134,64 @@ def get_roles_users_owned(user_keys: List[str]) -> Dict[str, List[str]]:
             continue
         out[id_to_user[ref.main_id].key].append(id_to_role[ref.attach_id].key)
     return out
+
+
+def delete_permissions_from_roles_or_users(permission_keys: List[str],
+                                           role_keys: List[str] = [], user_keys: List[str] = []) -> bool:
+    if not role_keys and not user_keys:
+        return True
+
+    permissions = item_controller.get_items(item_type=ItemType.permission, keys=permission_keys)
+    roles = item_controller.get_items(item_type=ItemType.role, keys=role_keys)
+    users = item_controller.get_items(item_type=ItemType.user, keys=user_keys)
+    if not roles and not users:
+        return True
+
+    if not permissions:
+        return True
+
+    refs = item_controller.get_item_refs(main_items=roles+users, attach_items=permissions)
+    return item_controller.disable_item_refs(refs)
+
+
+def grant_permissions_to_roles_or_users(permission_keys: List[str],
+                                        role_keys: List[str] = [], user_keys: List[str] = []) -> bool:
+    if not delete_permissions_from_roles_or_users(permission_keys=permission_keys, role_keys=role_keys, user_keys=user_keys):
+        return False
+    permissions = item_controller.get_items(item_type=ItemType.permission, keys=permission_keys)
+    roles = item_controller.get_items(item_type=ItemType.role, keys=role_keys)
+    users = item_controller.get_items(item_type=ItemType.user, keys=user_keys)
+
+    for item in roles + users:
+        if not item_controller.build_item_refs(main_item=item, attach_items=permissions):
+            return False
+    return True
+
+
+def get_permissions_of_items(keys: List[str], item_type: ItemType) -> Dict[str, List[str]]:
+    if not keys:
+        return dict()
+
+    items = item_controller.get_items(item_type=item_type, keys=keys)
+    id_to_items = {item.id: item for item in items}
+    refs = item_controller.get_item_refs(main_items=items)
+    attach_ids = [ref.attach_id for ref in refs]
+    permissions = item_controller.get_items(item_type=ItemType.permission, ids=attach_ids)
+    id_to_permissions = {permission.id: permission for permission in permissions}
+    permission_ids = list(id_to_permissions.keys())
+    out = defaultdict(list)
+    for ref in refs:
+        if ref.attach_id not in permission_ids:
+            continue
+        out[id_to_items[ref.main_id].key].append(id_to_permissions[ref.attach_id].key)
+    return out
+
+
+def get_permissions_of_roles(role_keys: List[str]) -> Dict[str, List[str]]:
+    if not role_keys:
+        return dict()
+    return get_permissions_of_items(keys=role_keys, item_type=ItemType.role)
+
+
+def get_permission_of_users(user_keys: List[str]) -> Dict[str, List[str]]:
+    return get_permissions_of_items(keys=user_keys, item_type=ItemType.user)

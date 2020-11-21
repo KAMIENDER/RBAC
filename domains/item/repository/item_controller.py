@@ -65,8 +65,9 @@ class ItemController(object):
             return list()
         return items
 
-    def disable_item(self, item: Item) -> bool:
-        item.disable = ItemDisable.disable.value
+    def disable_items(self, items: List[Item]) -> bool:
+        for item in items:
+            item.disable = ItemDisable.disable.value
         try:
             self.session.commit()
         except Exception as e:
@@ -74,8 +75,9 @@ class ItemController(object):
             return False
         return True
 
-    def enable_item(self, item: Item) -> bool:
-        item.disable = ItemDisable.able.value
+    def enable_items(self, items: List[Item]) -> bool:
+        for item in items:
+            item.disable = ItemDisable.able.value
         try:
             self.session.commit()
         except Exception as e:
