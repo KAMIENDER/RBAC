@@ -11,13 +11,13 @@ class UserController(object):
     def __init__(self, session: Session):
         self.session = session
 
-    def get_users(self, key: str = None,id: int = None, name: str = None, phone: int = None, email:str = None, offset: int=None, limit: int=None,
+    def get_users(self, keys: List[str] = [],ids: List[int] = [], name: str = None, phone: int = None, email:str = None, offset: int=None, limit: int=None,
                   user_type: UserType = UserType.Formal, disable: UserDisable = UserDisable.able, level: int = 0) -> List[User]:
         query = self.session.query(User).filter(User.type == user_type.value, User.disable == disable.value)
-        if key:
-            query = query.filter(User.key == key)
-        if id:
-            query = query.filter(User.id == id)
+        if keys:
+            query = query.filter(User.key.in_(keys))
+        if ids:
+            query = query.filter(User.id.in_(ids))
         if phone:
             query = query.filter(User.phone == phone)
         if offset:
@@ -48,7 +48,7 @@ class UserController(object):
         return users
 
     def update_user(self, user: User, name: str=None, phone: int=None, email:str=None,
-                  user_type: UserType = UserType.Formal, level: int = 0) -> bool:
+                  user_type: UserType = UserType.Formal, level: int = None) -> bool:
         if name:
             user.name = name
         if phone:
@@ -57,7 +57,7 @@ class UserController(object):
             user.email = email
         if user_type:
             user.type = user_type.value
-        if level:
+        if level is not None:
             user.level = level
         try:
             self.session.commit()
