@@ -29,18 +29,23 @@ class TestItemController(TestCase):
     def create_data(self):
         self.user_keys = ['user1', 'user2']
         self.role_keys = ['role1', 'role2']
+        self.permission_keys = ['per1', 'per2']
         self.users = dict()
         self.roles = dict()
+        self.permissions = dict()
         for key in self.user_keys:
             item = create_user(key=key)
             self.users[key] = item
         for key in self.role_keys:
             item = create_role(key=key)
             self.roles[key] = item
+        for key in self.permission_keys:
+            item = facade.creat_permission(key=key)
+            self.permissions[key] = item
 
     def tearDown(self):
         item_controller = get_item_controller(session=db_session)
-        item_controller.delete_items(self.role_keys+self.user_keys)
+        item_controller.delete_items(self.role_keys+self.user_keys+self.permission_keys)
         self.session.close()
         self.trans.rollback()
         self.connection.close()
@@ -81,5 +86,20 @@ class TestItemController(TestCase):
         roles_users_owned = facade.get_roles_users_owned(user_keys=self.user_keys)
         assert roles_users_owned == {self.user_keys[0]: self.role_keys, self.user_keys[1]: self.role_keys}
         result = facade.delete_roles_owners(role_keys=self.role_keys, user_keys=self.user_keys)
+        assert result is True
+
+        result = facade.grant_permissions_to_roles_or_users(
+            permission_keys=self.permission_keys, role_keys=self.role_keys, user_keys=self.user_keys)
+        assert result is True
+        user_permissions = facade.get_permission_of_users(self.user_keys)
+        assert user_permissions == {self.user_keys[0]: self.permission_keys, self.user_keys[1]: self.permission_keys}
+        result = facade.delete_permissions_from_roles_or_users([self.permission_keys[0]], self.user_keys[0])
+        assert result is True
+        user_permissions = facade.get_permission_of_users([self.user_keys[0]])
+        assert user_permissions == {self.user_keys[0]: [self.permission_keys[1]]}
+        role_permissions = facade.get_permissions_of_roles(role_keys=self.role_keys)
+        assert role_permissions == {self.role_keys[0]: self.permission_keys, self.role_keys[1]: self.permission_keys}
+        result = facade.delete_permissions_from_roles_or_users(
+            permission_keys=self.permission_keys, role_keys=self.role_keys, user_keys=self.user_keys)
         assert result is True
         return
