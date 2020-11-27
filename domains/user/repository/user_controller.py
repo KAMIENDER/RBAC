@@ -11,15 +11,15 @@ class UserController(object):
     def __init__(self, session: Session):
         self.session = session
 
-    def get_users(self, keys: List[str] = [],ids: List[int] = [], name: str = None, phone: int = None, email:str = None, offset: int=None, limit: int=None,
+    def get_users(self, keys: List[str] = [],ids: List[int] = [], name: str = None, phones: List[int] = None, email:str = None, offset: int=None, limit: int=None,
                   user_type: UserType = UserType.Formal, disable: UserDisable = UserDisable.able, level: int = 0) -> List[User]:
         query = self.session.query(User).filter(User.type == user_type.value, User.disable == disable.value)
         if keys:
             query = query.filter(User.key.in_(keys))
         if ids:
             query = query.filter(User.id.in_(ids))
-        if phone:
-            query = query.filter(User.phone == phone)
+        if phones:
+            query = query.filter(User.phone.in_(phones))
         if offset:
             query = query.offset(offset)
         if limit:
@@ -48,7 +48,9 @@ class UserController(object):
         return users
 
     def update_user(self, user: User, name: str=None, phone: int=None, email:str=None,
-                  user_type: UserType = UserType.Formal, level: int = None) -> bool:
+                  user_type: UserType = UserType.Formal, level: int = None, password: str=None) -> bool:
+        if password:
+            user.password = password
         if name:
             user.name = name
         if phone:
@@ -66,8 +68,9 @@ class UserController(object):
             return False
         return True
 
-    def disable_user(self, user: User) -> bool:
-        user.disable = UserDisable.disable.value
+    def disable_users(self, users: List[User]) -> bool:
+        for user in users:
+            user.disable = UserDisable.disable.value
         try:
             self.session.commit()
         except Exception as e:
@@ -84,9 +87,13 @@ class UserController(object):
             return False
         return True
 
-    def create_user(self, name: str, phone: int, email:str, key:str,
+    def create_user(self, name: str, key: str, password: str, phone: int = None, email: str = None,
                     user_type: UserType = UserType.Formal, disable: UserDisable = UserDisable.able, level: int = 0) -> User:
-        user = User(key=key, name=name, phone=phone, email=email, type=user_type.value, disable=disable.value, level=level)
+        user = User(key=key, name=name, password=password, phone=phone, email=email, type=user_type.value, disable=disable.value, level=level)
+        if email:
+            user.email = email
+        if phone:
+            user.phone = phone
         try:
             self.session.add(user)
             self.session.commit()

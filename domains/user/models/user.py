@@ -14,4 +14,5 @@ class User(Base):
     disable = Column(INTEGER)
     level = Column(INTEGER, nullable=False)
     key = Column(VARCHAR(255), nullable=False)
+    password = Column(VARCHAR(255), nullable=False)
 

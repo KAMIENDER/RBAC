@@ -25,13 +25,13 @@ class TestUserController(TestCase):
 
     def test_user_controller(self):
         user_controller = get_user_controller(session=self.session)
-        new_user = user_controller.create_user(name='tesfsdft', phone=1, email='test', key='test')
-        users = user_controller.get_users(name='tesfsdft', phone=1, email='test')
+        new_user = user_controller.create_user(name='tesfsdft', phone=1, email='test', key='test', password='test')
+        users = user_controller.get_users(name='tesfsdft', phones=[1], email='test')
         for user in users:
             assert new_user == user
         result = user_controller.update_user(new_user, name='fdsfsfdsfsfsdf')
-        assert result == True
-        users = user_controller.get_users(name='fdsfsfdsfsfsdf', phone=1, email='test', limit=1)
+        assert result is True
+        users = user_controller.get_users(name='fdsfsfdsfsfsdf', phones=[1], email='test', limit=1)
         for user in users:
             assert new_user == user
         return
