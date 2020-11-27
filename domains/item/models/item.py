@@ -1,10 +1,9 @@
 from sqlalchemy import Column, INTEGER, VARCHAR
-from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+from infrastructure.config.database_config import db
 
 
-class Item(Base):
+class Item(db.Model):
     __tablename__ = 'item'
     id = Column(INTEGER, primary_key=True)
     type = Column(INTEGER, nullable=False)

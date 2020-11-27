@@ -1,10 +1,9 @@
 from sqlalchemy import Column, INTEGER, VARCHAR
-from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+from infrastructure.config.database_config import db
 
 
-class ItemRef(Base):
+class ItemRef(db.Model):
     # 记录的是从属关系，attach为从，main为主
     __tablename__ = 'item_ref'
     id = Column(INTEGER, primary_key=True)

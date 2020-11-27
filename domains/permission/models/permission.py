@@ -1,10 +1,9 @@
 from sqlalchemy import Column, INTEGER, VARCHAR
-from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+from infrastructure.config.database_config import db
 
 
-class Permission(Base):
+class Permission(db.Model):
     __tablename__ = 'permission'
     id = Column(INTEGER, primary_key=True)
     disable = Column(INTEGER, nullable=False, default=0)
