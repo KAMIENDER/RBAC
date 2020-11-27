@@ -11,8 +11,9 @@ class UserController(object):
     def __init__(self, session: Session):
         self.session = session
 
-    def get_users(self, keys: List[str] = [],ids: List[int] = [], name: str = None, phones: List[int] = None, email:str = None, offset: int=None, limit: int=None,
-                  user_type: UserType = UserType.Formal, disable: UserDisable = UserDisable.able, level: int = 0) -> List[User]:
+    def get_users(self, keys: List[str] = [],ids: List[int] = [], name: str = None, phones: List[int] = None,
+                  email:str = None, offset: int=None, limit: int=None,user_type: UserType = UserType.Formal,
+                  disable: UserDisable = UserDisable.able, level: int = 0) -> List[User]:
         query = self.session.query(User).filter(User.type == user_type.value, User.disable == disable.value)
         if keys:
             query = query.filter(User.key.in_(keys))

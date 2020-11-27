@@ -1,5 +1,7 @@
 from typing import List
 
+from pydantic.main import BaseModel
+
 from domains.user.entity.value import UserType, UserDisable
 from domains.user.models.user import User
 from domains.user.repository.user_controller import get_user_controller
@@ -8,11 +10,21 @@ import domains.item.service.item_facade as item_facade
 uc = get_user_controller()
 
 
-def create_user(
-        key: str, name: str, user_type: UserType, level: int, password: str,
-        email: str = None, phone: str = None, extra: str = None) -> User:
-    user = uc.create_user(password=password, name=name, key=key, email=email, level=level, user_type=user_type, phone=phone)
-    if item_facade.create_user(key=user.key, extra=extra):
+class UserModel(BaseModel):
+    key: str
+    password: str
+    name: str
+    email: str = None
+    phone: str = None
+    extra: str = None
+    type: int
+    level: int
+
+
+def create_user(user: UserModel) -> User:
+    user = uc.create_user(password=user.password, name=user.name, key=user.key, email=user.email, level=user.level,
+                          user_type=UserType(user.type), phone=user.phone)
+    if user and item_facade.create_user(key=user.key, extra=user.extra):
         return user
     return None
 
@@ -21,7 +33,7 @@ def get_users(
         keys: List[str] = None, name: str = None, level: int = None, email: str = None,
         phones: List[int] = None, user_type: UserType = None, disable: UserDisable = UserDisable.able)\
         -> List[User]:
-    users = uc.get_users(keys=keys, name=name, phones=phones, email=email, user_type=user_type, disable=disable)
+    users = uc.get_users(keys=keys, name=name, phones=phones, email=email, user_type=user_type, disable=disable, level=level)
     return users
 
 
