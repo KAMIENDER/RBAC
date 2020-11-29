@@ -18,7 +18,7 @@ def create_role(key: str, extra: str = None) -> Item:
     return item
 
 
-def creat_permission(key: str, extra: str = None) -> Item:
+def create_permission(key: str, extra: str = None) -> Item:
     item = item_controller.create_item(key=key, item_type=ItemType.permission, extra=extra)
     return item
 
@@ -195,3 +195,103 @@ def get_permissions_of_roles(role_keys: List[str]) -> Dict[str, List[str]]:
 
 def get_permission_of_users(user_keys: List[str]) -> Dict[str, List[str]]:
     return get_permissions_of_items(keys=user_keys, item_type=ItemType.user)
+
+
+def get_items_have_in_items(attach_keys: List[str], attach_item_type: ItemType, main_item_type: ItemType)\
+        -> Dict[str, List[Item]]:
+    if not attach_keys:
+        return {}
+
+    attaches = item_controller.get_items(item_type=attach_item_type, keys=attach_keys)
+    id_to_attach = {attach.id: attach for attach in attaches}
+    refs = item_controller.get_item_refs(attach_items=attaches)
+    main_ids = [ref.main_id for ref in refs]
+    mains = item_controller.get_items(item_type=main_item_type, ids=main_ids)
+    id_to_main = {main.id: main for main in mains}
+    attach_ids = list(id_to_attach.keys())
+
+    out = defaultdict(list)
+    for ref in refs:
+        if ref.attach_id not in attach_ids:
+            continue
+        out[id_to_attach[ref.attach_id].key].append(id_to_main[ref.main_id].key)
+    return out
+
+
+def get_items_attached_to_in_items(main_keys: List[str], attach_item_type: ItemType, main_item_type: ItemType)\
+        -> Dict[str, List[Item]]:
+    if not main_keys:
+        return {}
+
+    mains = item_controller.get_items(item_type=main_item_type, keys=main_keys)
+    id_to_main = {main.id: main for main in mains}
+    refs = item_controller.get_item_refs(main_items=mains)
+    attach_ids = [ref.attach_id for ref in refs]
+    attaches = item_controller.get_items(item_type=attach_item_type, ids=attach_ids)
+    id_to_attach = {attach.id: attach for attach in attaches}
+    main_ids = list(id_to_main.keys())
+
+    out = defaultdict(list)
+    for ref in refs:
+        if ref.main_id not in main_ids:
+            continue
+        out[id_to_main[ref.main_id].key].append(id_to_attach[ref.attach_id].key)
+    return out
+
+
+def get_users_have_permissions(permission_keys: List[str]) -> Dict[str, List[str]]:
+    return get_items_have_in_items(
+        attach_keys=permission_keys, attach_item_type=ItemType.permission, main_item_type=ItemType.user)
+
+
+def get_roles_have_permissions(permission_keys: List[str]) -> Dict[str, List[str]]:
+    return get_items_have_in_items(
+        attach_keys=permission_keys, attach_item_type=ItemType.permission, main_item_type=ItemType.role)
+
+
+def disable_old_refs(attach_keys: List[str], main_keys: List[str], attach_type: ItemType, main_type: ItemType) -> bool:
+    if not attach_keys or not main_keys:
+        return True
+    attaches = item_controller.get_items(item_type=attach_type, keys=attach_keys)
+    mains = item_controller.get_items(item_type=main_type, keys=main_keys)
+    if not attaches or not mains:
+        return True
+    refs = item_controller.get_item_refs(attach_items=attaches, main_items=mains)
+    return item_controller.disable_item_refs(refs)
+
+
+def attach_in_items_to_mains(attach_keys: List[str], main_keys: List[str], attach_type: ItemType, main_type: ItemType,
+                             extra=None) -> bool:
+    if not attach_keys or not main_keys:
+        return True
+    if not disable_old_refs(
+            attach_keys=attach_keys, main_keys=main_keys, attach_type=attach_type, main_type=main_type):
+        return False
+    attaches = item_controller.get_items(item_type=attach_type, keys=attach_keys)
+    mains = item_controller.get_items(item_type=main_type, keys=main_keys)
+    if not attaches or not mains:
+        return True
+    refs = list()
+    for main in mains:
+        t_refs = item_controller.build_item_refs(main_item=main, attach_items=attach_keys, extra=extra)
+        if not t_refs:
+            disable_old_refs(refs)
+            return False
+        refs.extend(t_refs)
+    return True
+
+
+def set_permissions_owners(user_keys: List[str], permission_keys: List[str]) -> bool:
+    return attach_in_items_to_mains(
+        attach_keys=permission_keys, main_keys=user_keys, attach_type=ItemType.permission, main_type=ItemType.user)
+
+
+def disable_items(keys: List[str], item_type: ItemType) -> bool:
+    items = item_controller.get_items(keys=keys, item_type=item_type)
+    if not items:
+        return True
+    return item_controller.disable_items(items)
+
+
+def disable_permissions(keys: List[str]) -> bool:
+    return disable_items(keys=keys, item_type=ItemType.permission)
