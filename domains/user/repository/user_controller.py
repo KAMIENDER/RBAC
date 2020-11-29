@@ -14,7 +14,11 @@ class UserController(object):
     def get_users(self, keys: List[str] = [],ids: List[int] = [], name: str = None, phones: List[int] = None,
                   email:str = None, offset: int=None, limit: int=None,user_type: UserType = UserType.Formal,
                   disable: UserDisable = UserDisable.able, level: int = 0) -> List[User]:
-        query = self.session.query(User).filter(User.type == user_type.value, User.disable == disable.value)
+        query = self.session.query(User)
+        if user_type:
+            query = query.filter(User.type == user_type.value)
+        if disable:
+            query = query.filter(User.disable == disable.value)
         if keys:
             query = query.filter(User.key.in_(keys))
         if ids:
@@ -50,6 +54,8 @@ class UserController(object):
 
     def update_user(self, user: User, name: str=None, phone: int=None, email:str=None,
                   user_type: UserType = UserType.Formal, level: int = None, password: str=None) -> bool:
+        if not user:
+            return False
         if password:
             user.password = password
         if name:

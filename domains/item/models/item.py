@@ -1,4 +1,4 @@
-from sqlalchemy import Column, INTEGER, VARCHAR
+from sqlalchemy import Column, INTEGER, VARCHAR, UniqueConstraint
 
 from infrastructure.config.database_config import db
 
@@ -10,3 +10,7 @@ class Item(db.Model):
     disable = Column(INTEGER, nullable=False, default=0)
     key = Column(VARCHAR(255), nullable=False)
     extra = Column(VARCHAR(255))
+
+    __table_args__ = (
+        UniqueConstraint('key', 'type'),  # 姓名和年龄唯一
+    )

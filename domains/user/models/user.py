@@ -12,6 +12,6 @@ class User(db.Model):
     email = Column(VARCHAR(255))
     disable = Column(INTEGER)
     level = Column(INTEGER, nullable=False)
-    key = Column(VARCHAR(255), nullable=False)
+    key = Column(VARCHAR(255), nullable=False, unique=True)
     password = Column(VARCHAR(255), nullable=False)
 

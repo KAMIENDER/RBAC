@@ -8,5 +8,3 @@ app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 db_session = db.session
-
-from infrastructure.models.model_regitser import *

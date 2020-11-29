@@ -22,9 +22,9 @@ class UserModel(BaseModel):
 
 
 def create_user(user: UserModel) -> User:
-    user = uc.create_user(password=user.password, name=user.name, key=user.key, email=user.email, level=user.level,
+    new_user = uc.create_user(password=user.password, name=user.name, key=user.key, email=user.email, level=user.level,
                           user_type=UserType(user.type), phone=user.phone)
-    if user and item_facade.create_user(key=user.key, extra=user.extra):
+    if new_user and item_facade.create_user(key=user.key, extra=user.extra):
         return user
     return None
 
