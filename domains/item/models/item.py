@@ -12,5 +12,5 @@ class Item(db.Model):
     extra = Column(VARCHAR(255))
 
     __table_args__ = (
-        UniqueConstraint('key', 'type'),  # 姓名和年龄唯一
+        UniqueConstraint('key', 'type'),  # key和type联合唯一
     )

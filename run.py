@@ -1,3 +1,5 @@
+
+
 from infrastructure.config.blueprint import register
 from infrastructure.config.flask import app
 
