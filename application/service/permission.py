@@ -1,7 +1,7 @@
 import logging
-from importlib.resources import Resource
 
 from flask import request, jsonify
+from flask_restful import Resource
 
 from domains.permission.service.permission_facade import *
 
@@ -10,10 +10,14 @@ class PermissionBasicResource(Resource):
     def post(self):
         args = request.get_json()
         try:
-            owner_keys = args.get('owner_keys')
-            permission_key = args.get('permission_key')
-            permission_name = args.get('permission_name')
-            permission_level = args.get('permission_level')
+            owner_keys = args.get('owner_keys') or None
+            permission_key = args.get('permission_key') or None
+            permission_name = args.get('permission_name') or None
+            permission_level = args.get('permission_level') or None
+            if not all([owner_keys, permission_key, permission_name, permission_level]):
+                return {
+                    'message': 'need more args'
+                }, 400
         except Exception:
             return {
                 'message': 'args error'
@@ -32,9 +36,9 @@ class PermissionBasicResource(Resource):
         args = request.args
         try:
             owner_key = request.authorization.username
-            permission_keys = args.getlist('permission_keys')
-            permission_name = args.get('permission_name')
-            permission_level = args.get('permission_level')
+            permission_keys = args.getlist('permission_keys', type=str)
+            permission_name = args.get('permission_name', type=str, default='')
+            permission_level = args.get('permission_level', type=int)
         except Exception as e:
             return {
                        'message': 'args error'

@@ -25,15 +25,17 @@ class UserResource(Resource):
         }
 
     def get(self):
-        keys = request.args.getlist('keys', str) or None
-        name = request.args.get('name', str) or None
-        level = request.args.get('level', int) or None
-        type = request.args.get('type') or None
-        if type:
-            type = UserType(type)
-        phones = request.args.getlist('phones', int) or None
-        email = request.args.get('email', str) or None
-        users = get_users(keys, name=name, level=level, user_type=type, phones=phones, email=email)
+        keys = request.args.getlist('keys', type=str)
+        name = request.args.get('name', default='', type=str)
+        level = request.args.get('level', default=0, type=int)
+        user_type = request.args.get('type', type=int)
+        if user_type:
+            user_type = UserType(user_type)
+        if not level:
+            level = 0
+        phones = request.args.getlist('phones', type=int) or None
+        email = request.args.get('email', type=str, default='') or None
+        users = get_users(keys=keys, name=name, user_type=user_type, phones=phones, email=email, level=level)
         return {
             'data': users
         }

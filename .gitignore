@@ -1,0 +1,7 @@
+﻿.idea
+domains/item/models/__pycache__
+domains/permission/models/__pycache__
+domains/user/models/__pycache__
+infrastructure/config/__pycache__
+migrations/__pycache__
+migrations/versions/__pycache__
