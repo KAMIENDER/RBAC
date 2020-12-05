@@ -7,7 +7,7 @@ from domains.user.repository.user_controller import get_user_controller
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 
-engine = create_engine('mysql+mysqlconnector://root:root@localhost:3306/rbac')
+engine = create_engine('mysql+mysqlconnector://root:123456@localhost:3306/rbac')
 session = sessionmaker()
 
 

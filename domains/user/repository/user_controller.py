@@ -25,12 +25,12 @@ class UserController(object):
             query = query.filter(User.id.in_(ids))
         if phones:
             query = query.filter(User.phone.in_(phones))
+        if level:
+            query = query.filter(User.level == level)
         if offset:
             query = query.offset(offset)
         if limit:
             query = query.limit(limit)
-        if level:
-            query = query.filter(User.level == level)
         try:
             users = query.all()
 
