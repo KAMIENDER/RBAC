@@ -8,7 +8,7 @@ from domains.user.entity.value import UserType
 from domains.user.service.facade import create_user, get_users, update_user
 
 
-class UserReource(Resource):
+class UserResource(Resource):
     def post(self):
         try:
             args = request.get_json()

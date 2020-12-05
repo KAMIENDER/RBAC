@@ -193,7 +193,7 @@ def get_permissions_of_roles(role_keys: List[str]) -> Dict[str, List[str]]:
     return get_permissions_of_items(keys=role_keys, item_type=ItemType.role)
 
 
-def get_permission_of_users(user_keys: List[str]) -> Dict[str, List[str]]:
+def get_permissions_of_users(user_keys: List[str]) -> Dict[str, List[str]]:
     return get_permissions_of_items(keys=user_keys, item_type=ItemType.user)
 
 
