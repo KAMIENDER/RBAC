@@ -1,7 +1,8 @@
 import logging
 
-from flask import request
+from flask import request, jsonify
 from flask_restful import Resource
+from pydantic.main import BaseModel
 
 from application.request.user import UserRegisterRequestModel
 from domains.user.entity.value import UserType
@@ -9,11 +10,22 @@ from domains.user.service.facade import create_user, get_users, update_user
 
 
 class UserResource(Resource):
+    class UserModel(BaseModel):
+        key: str
+        name: str
+        email: str = None
+        phone: str = None
+        extra: str = None
+        type: int
+        level: int
+
+        class Config:
+            orm_mode = True
+
     def post(self):
         try:
             args = request.get_json()
             args = UserRegisterRequestModel.parse_obj(args)
-            logging.debug(args.name)
             create_user(args)
         except Exception as e:
             logging.error(f"user resource create user error: {e}, args: {args}")
@@ -36,8 +48,11 @@ class UserResource(Resource):
         phones = request.args.getlist('phones', type=int) or None
         email = request.args.get('email', type=str, default='') or None
         users = get_users(keys=keys, name=name, user_type=user_type, phones=phones, email=email, level=level)
+        out = list()
+        for user in users:
+            out.append(dict(self.UserModel.from_orm(user)))
         return {
-            'data': users
+            'data': out
         }
 
 

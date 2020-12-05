@@ -9,6 +9,8 @@ def required_login():
     if request.endpoint == 'userresource':
         return
     ctx = request.authorization
+    if not ctx:
+        return {'message': 'no auth'}, 403
     users = get_users(keys=[ctx.username])
     if not users or users[0].password != ctx.password:
         return {'message': 'username or password error'}, 403

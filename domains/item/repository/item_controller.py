@@ -47,7 +47,13 @@ class ItemController(object):
     def get_items(self, item_type: ItemType, keys: List[str] = None, ids: int = None,
                   disable: ItemDisable = ItemDisable.able, extra: str = None, offset: int = None, limit: int = None)\
             -> List[Item]:
-        query = self.session.query(Item).filter(Item.type == item_type.value, Item.disable == disable.value)
+        if not any([item_type, keys, ids, disable, extra]):
+            return []
+        query = self.session.query(Item)
+        if item_type:
+            query = query.filter(Item.type == item_type.value)
+        if disable:
+            query = query.filter(Item.disable == disable.value)
         if keys:
             query = query.filter(Item.key.in_(keys))
         if ids:
@@ -139,9 +145,13 @@ class ItemController(object):
         return True
 
     def get_item_refs(self, main_items: List[Item] = [], attach_items: List[Item] = [],
-                      disable: ItemRefDisable = ItemRefDisable.able, extra: str = None,
+                      disable: ItemRefDisable = None, extra: str = None,
                       offset: int = None, limit: int = None) -> List[ItemRef]:
-        query = self.session.query(ItemRef).filter(ItemRef.disable == disable.value)
+        if not any([main_items, attach_items, disable, extra]):
+            return []
+        query = self.session.query(ItemRef)
+        if disable:
+            query = query.filter(ItemRef.disable == disable.value)
         if main_items:
             main_item_ids = [item.id for item in main_items]
             query = query.filter(ItemRef.main_id.in_(main_item_ids))

@@ -33,9 +33,13 @@ class PermissionController(object):
         return permission
 
     def get_permissions(self, keys: List[str] = [], ids: List[int] = [], name: str = None, offset: int = None,
-                        limit: int = None, disable: PermissionDisable = PermissionDisable.able, level: int = 0,
+                        limit: int = None, disable: PermissionDisable = None, level: int = 0,
                         extra: str = None) -> List[Permission]:
-        query = self.session.query(Permission).filter(Permission.disable == disable.value)
+        if not any([keys, ids, name, disable, level, extra]):
+            return []
+        query = self.session.query(Permission)
+        if disable:
+            query = query.filter(Permission.disable == disable.value)
         if keys:
             query = query.filter(Permission.key.in_(keys))
         if ids:

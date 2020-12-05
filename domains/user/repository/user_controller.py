@@ -12,8 +12,10 @@ class UserController(object):
         self.session = session
 
     def get_users(self, keys: List[str] = [],ids: List[int] = [], name: str = None, phones: List[int] = None,
-                  email:str = None, offset: int=None, limit: int=None,user_type: UserType = UserType.Formal,
-                  disable: UserDisable = UserDisable.able, level: int = 0) -> List[User]:
+                  email:str = None, offset: int=None, limit: int=None,user_type: UserType = None,
+                  disable: UserDisable = None, level: int = 0) -> List[User]:
+        if not any([keys, ids, name, phones, email, user_type, disable, level]):
+            return []
         query = self.session.query(User)
         if user_type:
             query = query.filter(User.type == user_type.value)

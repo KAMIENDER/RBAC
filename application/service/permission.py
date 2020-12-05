@@ -2,11 +2,24 @@ import logging
 
 from flask import request, jsonify
 from flask_restful import Resource
+from pydantic import BaseModel
 
-from domains.permission.service.permission_facade import *
+from domains.permission.service.permission_facade import create_permission, get_user_owned_permissions, \
+    get_user_had_but_not_owned_permissions
 
 
 class PermissionBasicResource(Resource):
+    class PermissionModel(BaseModel):
+        id: int
+        disable: int
+        key: str
+        name: str
+        level: str
+        extra: str = None
+
+        class Config:
+            orm_mode = True
+
     def post(self):
         args = request.get_json()
         try:
@@ -44,12 +57,23 @@ class PermissionBasicResource(Resource):
                        'message': 'args error'
                    }, 400
         try:
-            permissions = get_permissions(
+            permissions = get_user_owned_permissions(
                 owner_keys=[owner_key], permission_level=permission_level, permission_name=permission_name,
                 permission_keys=permission_keys)
+            permissions_had = get_user_had_but_not_owned_permissions(
+                user_keys=[owner_key], permission_level=permission_level, permission_name=permission_name,
+                permission_keys=permission_keys)
+            permissions.extend(permissions_had)
+            out = list()
+            in_out_permission_keys = list()
+            for permission in permissions:
+                if permission.key in in_out_permission_keys:
+                    continue
+                out.append(dict(self.PermissionModel.from_orm(permission)))
+                in_out_permission_keys.append(permission.key)
         except Exception as e:
             logging.error(f'{owner_key} get permission error: {e}')
             return {
                 'messgae': 'some thing error'
             }, 500
-        return jsonify(permissions), 200
+        return {'data': out}, 200

@@ -193,8 +193,12 @@ def get_permissions_of_roles(role_keys: List[str]) -> Dict[str, List[str]]:
     return get_permissions_of_items(keys=role_keys, item_type=ItemType.role)
 
 
-def get_permissions_of_users(user_keys: List[str]) -> Dict[str, List[str]]:
+def get_own_permissions_of_users(user_keys: List[str]) -> Dict[str, List[str]]:
     return get_permissions_of_items(keys=user_keys, item_type=ItemType.user)
+
+
+def get_had_not_owned_permissions_of_users(user_keys: List[str]) -> Dict[str, List[str]]:
+    return get_items_have_in_items(attach_keys=user_keys, attach_item_type=ItemType.user, main_item_type=ItemType.permission)
 
 
 def get_items_have_in_items(attach_keys: List[str], attach_item_type: ItemType, main_item_type: ItemType)\
@@ -273,9 +277,9 @@ def attach_in_items_to_mains(attach_keys: List[str], main_keys: List[str], attac
         return True
     refs = list()
     for main in mains:
-        t_refs = item_controller.build_item_refs(main_item=main, attach_items=attach_keys, extra=extra)
+        t_refs = item_controller.build_item_refs(main_item=main, attach_items=attaches, extra=extra)
         if not t_refs:
-            disable_old_refs(refs)
+            item_controller.disable_item_refs(refs)
             return False
         refs.extend(t_refs)
     return True

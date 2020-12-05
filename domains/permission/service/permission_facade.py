@@ -26,14 +26,24 @@ def create_permission(
     return True
 
 
-def get_permissions(
-        owner_keys: List[str]=[], permission_keys: List[str]=[], permission_name: str=None,
-        permission_level: int=None, extra: str=None) -> Permission:
-    userkey2permissionkeys = None
-    if owner_keys:
-        userkey2permissionkeys = get_permissions_of_users(user_keys=owner_keys)
+def get_user_owned_permissions(
+        owner_keys: List[str], permission_keys: List[str]=[], permission_name: str=None,
+        permission_level: int=None, extra: str=None) -> List[Permission]:
+    temp_permission_keys = list()
+    temp_permission_keys.extend(permission_keys)
+    userkey2permissionkeys = get_own_permissions_of_users(user_keys=owner_keys)
     if userkey2permissionkeys:
-        [permission_keys.extend(value) for value in userkey2permissionkeys.values()]
-    return pc.get_permissions(keys=permission_keys, name=permission_name, level=permission_level, extra=extra)
+        [temp_permission_keys.extend(value) for value in userkey2permissionkeys.values()]
+    return pc.get_permissions(keys=temp_permission_keys, name=permission_name, level=permission_level, extra=extra)
 
+
+def get_user_had_but_not_owned_permissions(
+        user_keys: List[str]=[], permission_keys: List[str]=[], permission_name: str=None,
+        permission_level: int=None, extra: str=None) -> List[Permission]:
+    temp_permission_keys = list()
+    temp_permission_keys.extend(permission_keys)
+    userkey2permissionkeys = get_had_not_owned_permissions_of_users(user_keys=user_keys)
+    if userkey2permissionkeys:
+        [temp_permission_keys.extend(value) for value in userkey2permissionkeys.values()]
+    return pc.get_permissions(keys=temp_permission_keys, name=permission_name, level=permission_level, extra=extra)
 
