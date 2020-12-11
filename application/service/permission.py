@@ -1,6 +1,6 @@
 import logging
 
-from flask import request, jsonify
+from flask import request
 from flask_restful import Resource
 from pydantic import BaseModel
 
@@ -77,3 +77,32 @@ class PermissionBasicResource(Resource):
                 'messgae': 'some thing error'
             }, 500
         return {'data': out}, 200
+
+
+class PermissionAuthResource(Resource):
+    def get(self):
+        try:
+            args = request.args
+            user_keys = args.getlist(key='user_keys')
+            role_keys = args.getlist(key='role_keys')
+            permission_keys = args.getlist(key='permission_keys')
+            if not any([user_keys, role_keys]) or not permission_keys:
+                return {'message': 'need more args'}, 400
+        except Exception as e:
+            return {
+                   'message': 'args error'
+               }, 400
+        try:
+            out = dict()
+            for user_key in user_keys:
+                permissions = get_user_owned_permissions(
+                    owner_keys=[user_key], permission_keys=permission_keys)
+                permissions_had = get_user_had_but_not_owned_permissions(
+                    user_keys=[user_key], permission_keys=permission_keys)
+
+        except Exception as e:
+            logging.error(f'{request.authorization.username} auth error: {e}')
+            return {
+                'message': 'internale error'
+            }, 500
+
