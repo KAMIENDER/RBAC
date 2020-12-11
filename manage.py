@@ -8,6 +8,7 @@ from domains.item.models.item import Item
 from domains.item.models.item_ref import ItemRef
 from domains.permission.models.permission import Permission
 from domains.user.models.user import User
+from domains.role.models.role import Role
 
 manager = Manager(app)
 migrate = Migrate(app, db, render_as_batch=True, compare_type=True, compare_server_default=True)
