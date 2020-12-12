@@ -4,8 +4,7 @@ from flask import request
 from flask_restful import Resource
 from pydantic import BaseModel
 
-from domains.permission.service.permission_facade import create_permission, get_user_owned_permissions, \
-    get_user_had_but_not_owned_permissions
+from domains.permission.service.permission_facade import *
 
 
 class PermissionBasicResource(Resource):
@@ -20,6 +19,7 @@ class PermissionBasicResource(Resource):
         class Config:
             orm_mode = True
 
+    #  新建权限
     def post(self):
         args = request.get_json()
         try:
@@ -45,64 +45,35 @@ class PermissionBasicResource(Resource):
             'message': 'create failed'
         }
 
+    # 查找权限
     def get(self):
         args = request.args
         try:
-            owner_key = request.authorization.username
-            permission_keys = args.getlist('permission_keys', type=str)
+            owner_keys = args.getlist("owner_keys", type=str)
+            permission_keys = args.getlist('permission_keys', type=str) or []
             permission_name = args.get('permission_name', type=str, default='')
             permission_level = args.get('permission_level', type=int)
+            disable = args.get('permission_disable', type=int)
+            if disable:
+                disable = PermissionDisable(disable)
         except Exception as e:
             return {
                        'message': 'args error'
                    }, 400
         try:
-            permissions = get_user_owned_permissions(
-                owner_keys=[owner_key], permission_level=permission_level, permission_name=permission_name,
-                permission_keys=permission_keys)
-            permissions_had = get_user_had_but_not_owned_permissions(
-                user_keys=[owner_key], permission_level=permission_level, permission_name=permission_name,
-                permission_keys=permission_keys)
-            permissions.extend(permissions_had)
             out = list()
-            in_out_permission_keys = list()
+            if owner_keys:
+                owner_permissions = get_permissions_users_ownerd(user_keys=owner_keys, disable=disable)
+                permission_keys.extend([permission.key for permission in owner_permissions])
+            permissions = get_permissions(
+                keys=permission_keys, name=permission_name, level=permission_level, disable=disable)
             for permission in permissions:
-                if permission.key in in_out_permission_keys:
-                    continue
                 out.append(dict(self.PermissionModel.from_orm(permission)))
-                in_out_permission_keys.append(permission.key)
         except Exception as e:
-            logging.error(f'{owner_key} get permission error: {e}')
+            logging.error(f'search permission error: {e}')
             return {
                 'messgae': 'some thing error'
             }, 500
         return {'data': out}, 200
 
-
-class PermissionAuthResource(Resource):
-    def get(self):
-        try:
-            args = request.args
-            user_keys = args.getlist(key='user_keys')
-            role_keys = args.getlist(key='role_keys')
-            permission_keys = args.getlist(key='permission_keys')
-            if not any([user_keys, role_keys]) or not permission_keys:
-                return {'message': 'need more args'}, 400
-        except Exception as e:
-            return {
-                   'message': 'args error'
-               }, 400
-        try:
-            out = dict()
-            for user_key in user_keys:
-                permissions = get_user_owned_permissions(
-                    owner_keys=[user_key], permission_keys=permission_keys)
-                permissions_had = get_user_had_but_not_owned_permissions(
-                    user_keys=[user_key], permission_keys=permission_keys)
-
-        except Exception as e:
-            logging.error(f'{request.authorization.username} auth error: {e}')
-            return {
-                'message': 'internale error'
-            }, 500
 

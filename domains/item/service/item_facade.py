@@ -205,7 +205,7 @@ def get_had_not_owned_permissions_of_users(user_keys: List[str]) -> Dict[str, Li
 
 
 def get_items_have_in_items(attach_keys: List[str], attach_item_type: ItemType, main_item_type: ItemType) \
-        -> Dict[str, List[Item]]:
+        -> Dict[str, List[str]]:
     if not attach_keys:
         return {}
 
@@ -227,7 +227,7 @@ def get_items_have_in_items(attach_keys: List[str], attach_item_type: ItemType, 
 
 def get_items_attached_to_in_items(main_keys: List[str], attach_item_type: ItemType, main_item_type: ItemType,
                                    disable: ItemDisable = ItemRefDisable.able) \
-        -> Dict[str, List[Item]]:
+        -> Dict[str, List[str]]:
     if not main_keys:
         return {}
 

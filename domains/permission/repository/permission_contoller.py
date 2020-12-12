@@ -33,7 +33,7 @@ class PermissionController(object):
         return permission
 
     def get_permissions(self, keys: List[str] = [], ids: List[int] = [], name: str = None, offset: int = None,
-                        limit: int = None, disable: PermissionDisable = None, level: int = 0,
+                        limit: int = None, disable: PermissionDisable = None, level: int = None,
                         extra: str = None) -> List[Permission]:
         if not any([keys, ids, name, disable, level, extra]):
             return []
