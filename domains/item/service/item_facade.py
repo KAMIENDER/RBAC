@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import List, Dict
 
-from domains.item.entity.const import ItemType, ItemDisable
+from domains.item.entity.const import ItemType, ItemDisable, ItemRefDisable
 from domains.item.models.item import Item
 from domains.item.models.item_ref import ItemRef
 from domains.item.repository.item_controller import get_item_controller
@@ -26,7 +26,7 @@ def create_permission(key: str, extra: str = None) -> Item:
 
 def get_roles_member_keys(role_keys: List[str]) -> Dict[str, List[str]]:
     role_items = item_controller.get_items(item_type=ItemType.role, keys=role_keys)
-    role_user_refs = item_controller.get_item_refs(main_items=role_items)
+    role_user_refs = item_controller.get_item_refs(main_items=role_items, disable=ItemRefDisable.able)
     role_id_to_role_item = {item.id: item for item in role_items}
     out = defaultdict(list)
     user_item_ids = [ref.attach_id for ref in role_user_refs]
@@ -59,13 +59,13 @@ def delete_roles_members(user_keys: List[str], role_keys: List[str], extra: str 
     user_items = item_controller.get_items(item_type=ItemType.user, keys=user_keys)
     if len(user_keys) != len(user_items):
         return False
-    old_refs = item_controller.get_item_refs(main_items=role_items, attach_items=user_items)
+    old_refs = item_controller.get_item_refs(main_items=role_items, attach_items=user_items, disable=ItemRefDisable.able)
     return item_controller.disable_item_refs(old_refs)
 
 
 def get_users_roles(user_keys: List[str]) -> Dict[str, List[str]]:
     users = item_controller.get_items(item_type=ItemType.user, keys=user_keys)
-    refs = item_controller.get_item_refs(attach_items=users)
+    refs = item_controller.get_item_refs(attach_items=users, disable=ItemRefDisable.able)
     role_ids = [ref.main_id for ref in refs]
     out = defaultdict(list)
     roles = item_controller.get_items(item_type=ItemType.role, ids=role_ids)
@@ -117,13 +117,13 @@ def delete_roles_owners(role_keys: List[str], user_keys: List[str]) -> bool:
     user_items = item_controller.get_items(item_type=ItemType.user, keys=user_keys)
     if not user_items:
         return False
-    old_refs = item_controller.get_item_refs(main_items=user_items, attach_items=role_items)
+    old_refs = item_controller.get_item_refs(main_items=user_items, attach_items=role_items, disable=ItemRefDisable.able)
     return item_controller.disable_item_refs(old_refs)
 
 
 def get_roles_users_owned(user_keys: List[str]) -> Dict[str, List[str]]:
     users = item_controller.get_items(item_type=ItemType.user, keys=user_keys)
-    refs = item_controller.get_item_refs(main_items=users)
+    refs = item_controller.get_item_refs(main_items=users, disable=ItemRefDisable.able)
     attach_ids = [ref.attach_id for ref in refs]
     roles = item_controller.get_items(item_type=ItemType.role, ids=attach_ids)
     id_to_user = {user.id: user for user in users}
@@ -137,7 +137,7 @@ def get_roles_users_owned(user_keys: List[str]) -> Dict[str, List[str]]:
     return out
 
 
-def delete_permissions_from_roles_or_users(permission_keys: List[str],
+def delete_roles_or_users_owned_permissions(permission_keys: List[str],
                                            role_keys: List[str] = [], user_keys: List[str] = []) -> bool:
     if not role_keys and not user_keys:
         return True
@@ -151,13 +151,13 @@ def delete_permissions_from_roles_or_users(permission_keys: List[str],
     if not permissions:
         return True
 
-    refs = item_controller.get_item_refs(main_items=roles + users, attach_items=permissions)
+    refs = item_controller.get_item_refs(main_items=roles + users, attach_items=permissions, disable=ItemRefDisable.able)
     return item_controller.disable_item_refs(refs)
 
 
-def grant_permissions_to_roles_or_users(permission_keys: List[str],
+def set_permissions_owner_to_roles_or_users(permission_keys: List[str],
                                         role_keys: List[str] = [], user_keys: List[str] = []) -> bool:
-    if not delete_permissions_from_roles_or_users(permission_keys=permission_keys, role_keys=role_keys,
+    if not delete_roles_or_users_owned_permissions(permission_keys=permission_keys, role_keys=role_keys,
                                                   user_keys=user_keys):
         return False
     permissions = item_controller.get_items(item_type=ItemType.permission, keys=permission_keys)
@@ -170,13 +170,13 @@ def grant_permissions_to_roles_or_users(permission_keys: List[str],
     return True
 
 
-def get_permissions_of_items(keys: List[str], item_type: ItemType) -> Dict[str, List[str]]:
+def get_permissions_of_items_owned(keys: List[str], item_type: ItemType) -> Dict[str, List[str]]:
     if not keys:
         return dict()
 
     items = item_controller.get_items(item_type=item_type, keys=keys)
     id_to_items = {item.id: item for item in items}
-    refs = item_controller.get_item_refs(main_items=items)
+    refs = item_controller.get_item_refs(main_items=items, disable=ItemRefDisable.able)
     attach_ids = [ref.attach_id for ref in refs]
     permissions = item_controller.get_items(item_type=ItemType.permission, ids=attach_ids)
     id_to_permissions = {permission.id: permission for permission in permissions}
@@ -189,14 +189,14 @@ def get_permissions_of_items(keys: List[str], item_type: ItemType) -> Dict[str, 
     return out
 
 
-def get_permissions_of_roles(role_keys: List[str]) -> Dict[str, List[str]]:
+def get_own_permissions_of_roles(role_keys: List[str]) -> Dict[str, List[str]]:
     if not role_keys:
         return dict()
-    return get_permissions_of_items(keys=role_keys, item_type=ItemType.role)
+    return get_permissions_of_items_owned(keys=role_keys, item_type=ItemType.role)
 
 
 def get_own_permissions_of_users(user_keys: List[str]) -> Dict[str, List[str]]:
-    return get_permissions_of_items(keys=user_keys, item_type=ItemType.user)
+    return get_permissions_of_items_owned(keys=user_keys, item_type=ItemType.user)
 
 
 def get_had_not_owned_permissions_of_users(user_keys: List[str]) -> Dict[str, List[str]]:
@@ -211,7 +211,7 @@ def get_items_have_in_items(attach_keys: List[str], attach_item_type: ItemType, 
 
     attaches = item_controller.get_items(item_type=attach_item_type, keys=attach_keys)
     id_to_attach = {attach.id: attach for attach in attaches}
-    refs = item_controller.get_item_refs(attach_items=attaches)
+    refs = item_controller.get_item_refs(attach_items=attaches, disable=ItemRefDisable.able)
     main_ids = [ref.main_id for ref in refs]
     mains = item_controller.get_items(item_type=main_item_type, ids=main_ids)
     id_to_main = {main.id: main for main in mains}
@@ -225,14 +225,15 @@ def get_items_have_in_items(attach_keys: List[str], attach_item_type: ItemType, 
     return out
 
 
-def get_items_attached_to_in_items(main_keys: List[str], attach_item_type: ItemType, main_item_type: ItemType) \
+def get_items_attached_to_in_items(main_keys: List[str], attach_item_type: ItemType, main_item_type: ItemType,
+                                   disable: ItemDisable = ItemRefDisable.able) \
         -> Dict[str, List[Item]]:
     if not main_keys:
         return {}
 
     mains = item_controller.get_items(item_type=main_item_type, keys=main_keys)
     id_to_main = {main.id: main for main in mains}
-    refs = item_controller.get_item_refs(main_items=mains)
+    refs = item_controller.get_item_refs(main_items=mains, disable=disable)
     attach_ids = [ref.attach_id for ref in refs]
     attaches = item_controller.get_items(item_type=attach_item_type, ids=attach_ids)
     id_to_attach = {attach.id: attach for attach in attaches}
@@ -258,7 +259,7 @@ def disable_old_refs(attach_keys: List[str], main_keys: List[str], attach_type: 
     mains = item_controller.get_items(item_type=main_type, keys=main_keys)
     if not attaches or not mains:
         return True
-    refs = item_controller.get_item_refs(attach_items=attaches, main_items=mains)
+    refs = item_controller.get_item_refs(attach_items=attaches, main_items=mains, disable=ItemRefDisable.able)
     return item_controller.disable_item_refs(refs)
 
 

@@ -4,6 +4,7 @@ from domains.item.service.item_facade import *
 from domains.permission.models.permission import Permission
 from domains.permission.repository.permission_contoller import get_permission_controller
 import domains.item.service.item_facade as item_facade
+import domains.user.service.facade as user_facade
 
 pc = get_permission_controller()
 
@@ -47,3 +48,28 @@ def get_user_had_but_not_owned_permissions(
         [temp_permission_keys.extend(value) for value in userkey2permissionkeys.values()]
     return pc.get_permissions(keys=temp_permission_keys, name=permission_name, level=permission_level, extra=extra)
 
+
+def set_permissions_owners(permission_keys: List[str], owner_keys: List[str]) -> bool:
+    if not owner_keys:
+        return True
+    owners = user_facade.get_users(keys=owner_keys)
+    if not owners:
+        return False
+    return item_facade.set_permissions_owners(
+        user_keys=[owner.key for owner in owners], permission_keys=permission_keys)
+
+
+def delete_permissions_owners(permission_keys: List[str], owner_keys: List[str]) -> bool:
+    owners = user_facade.get_users(keys=owner_keys)
+    if not owners:
+        return False
+    return item_facade.delete_permissions_owners(
+        permission_keys=[permission.key for permission in permissions], user_keys=[owner.key for owner in owners])
+
+
+def update_permissions_owners(permission_keys: List[str], owner_keys: List[str]) -> bool:
+    permissionkey2ownerkey = item_facade.get_permissions_owners(permission_keys=[permission.key for permission in permissions])
+    test = dict(permissionkey2ownerkey)
+    for key, value in dict(permissionkey2ownerkey).items():
+        item_facade.delete_permissions_owners(permission_keys=[key], user_keys=value)
+    return set_permissions_owners(permissions, owner_keys)

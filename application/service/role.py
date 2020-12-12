@@ -9,6 +9,7 @@ from domains.role.entity.value import RoleType
 from domains.role.service.role_facade import create_role, get_roles, update_role
 import domains.role.service.role_facade as role_facade
 
+
 class RoleResource(Resource):
     class RoleModel(BaseModel):
         owner_keys: List[str]
