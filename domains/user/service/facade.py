@@ -31,7 +31,7 @@ def create_user(user: UserModel) -> User:
 
 def get_users(
         keys: List[str] = None, name: str = None, level: int = None, email: str = None,
-        phones: List[int] = None, user_type: UserType = None, disable: UserDisable = UserDisable.able)\
+        phones: List[int] = None, user_type: UserType = None, disable: UserDisable = None)\
         -> List[User]:
     users = uc.get_users(keys=keys, name=name, phones=phones, email=email, user_type=user_type, disable=disable, level=level)
     return users

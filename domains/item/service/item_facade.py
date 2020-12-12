@@ -97,7 +97,7 @@ def get_roles_owners(role_keys: List[str]) -> Dict[str, List[str]]:
     if len(role_keys) != len(roles):
         return False
     id_to_role = {role.id: role for role in roles}
-    refs = item_controller.get_item_refs(attach_items=roles)
+    refs = item_controller.get_item_refs(attach_items=roles, disable=ItemDisable.able)
     user_ids = [ref.main_id for ref in refs]
     users = item_controller.get_items(item_type=ItemType.user, ids=user_ids)
     id_to_user = {user.id: user for user in users}
@@ -112,10 +112,10 @@ def get_roles_owners(role_keys: List[str]) -> Dict[str, List[str]]:
 
 def delete_roles_owners(role_keys: List[str], user_keys: List[str]) -> bool:
     role_items = item_controller.get_items(item_type=ItemType.role, keys=role_keys)
-    if len(role_items) != len(role_keys):
+    if not role_items:
         return False
     user_items = item_controller.get_items(item_type=ItemType.user, keys=user_keys)
-    if len(user_keys) != len(user_items):
+    if not user_items:
         return False
     old_refs = item_controller.get_item_refs(main_items=user_items, attach_items=role_items)
     return item_controller.disable_item_refs(old_refs)

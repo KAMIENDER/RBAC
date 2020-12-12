@@ -74,7 +74,7 @@ class UserUpdateResource(Resource):
         phone = args.get('phone', None)
         email = args.get('email', None)
         for user in users:
-            if not update_user(user, name=name, level=level, type=type, phone=phone, email=email, password=password):
+            if not update_user(user, name=name, level=level, user_type=type, phone=phone, email=email, password=password):
                 return {
                     'message': 'error'
                 }

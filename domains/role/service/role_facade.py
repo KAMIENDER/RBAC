@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from pydantic.main import BaseModel
 
@@ -6,11 +6,13 @@ from domains.role.entity.value import RoleType, RoleDisable
 from domains.role.models.role import Role
 from domains.role.repository.role_controller import get_role_controller
 import domains.item.service.item_facade as item_facade
+import domains.user.service.facade as user_facade
 
-uc = get_role_controller()
+rc = get_role_controller()
 
 
 class RoleModel(BaseModel):
+    owner_keys: List[str]
     key: str
     name: str
     extra: str = None
@@ -18,26 +20,66 @@ class RoleModel(BaseModel):
     level: int
 
 
+def set_roles_owners(roles: List[RoleModel], owner_keys: List[str]) -> bool:
+    if not owner_keys:
+        return True
+    owners = user_facade.get_users(keys=owner_keys)
+    if not owners:
+        return False
+    return item_facade.set_owners_of_roles(
+        user_keys=[owner.key for owner in owners], role_keys=[role.key for role in roles])
+
+
+def delete_roles_owners(roles: List[RoleModel], owner_keys: List[str]) -> bool:
+    owners = user_facade.get_users(keys=owner_keys)
+    if not owners:
+        return False
+    return item_facade.delete_roles_owners(
+        role_keys=[role.key for role in roles], user_keys=[owner.key for owner in owners])
+
+
+def update_roles_owners(roles: List[RoleModel], owner_keys: List[str]) -> bool:
+    rolekey2ownerkey = item_facade.get_roles_owners(role_keys=[role.key for role in roles])
+    test = dict(rolekey2ownerkey)
+    for key, value in dict(rolekey2ownerkey).items():
+        item_facade.delete_roles_owners(role_keys=[key], user_keys=value)
+    return set_roles_owners(roles, owner_keys)
+
+
+def get_roles_owners(roles: List[RoleModel]) -> Dict[str, List[str]]:
+    return item_facade.get_roles_owners([role.key for role in roles])
+
+
 def create_role(role: RoleModel) -> Role:
-    new_role = uc.create_role(name=role.name, key=role.key, level=role.level,
+    owners = user_facade.get_users(keys=role.owner_keys)
+    if not owners:
+        return None
+    if not item_facade.create_role(key=role.key, extra=role.extra):
+        return None
+    new_role = rc.create_role(name=role.name, key=role.key, level=role.level,
                           role_type=RoleType(role.type))
-    if new_role and item_facade.create_role(key=role.key, extra=role.extra):
-        return role
-    return None
+    if not new_role:
+        item_facade.disable_items(keys=[role.key])
+        return None
+    if not item_facade.set_owners_of_roles(user_keys=[owner.key for owner in owners], role_keys=[role.key]):
+        item_facade.disable_items(keys=[role.key])
+        rc.disable_roles([new_role])
+        return None
+    return new_role
 
 
 def get_roles(
         keys: List[str] = None, name: str = None, level: int = None,
         role_type: RoleType = None, disable: RoleDisable = RoleDisable.able)\
         -> List[Role]:
-    roles = uc.get_roles(keys=keys, name=name, role_type=role_type, disable=disable, level=level)
+    roles = rc.get_roles(keys=keys, name=name, role_type=role_type, disable=disable, level=level)
     return roles
 
 
 def delete_roles(roles: List[Role]) -> bool:
-    return uc.disable_roles(roles) and item_facade.disable_items([role.key for role in roles], item_type=item_facade.ItemType.role)
+    return rc.disable_roles(roles) and item_facade.disable_items([role.key for role in roles], item_type=item_facade.ItemType.role)
 
 
 def update_role(role: Role, name: str = None,
                 role_type: RoleType = None, level: int = None) -> bool:
-    return uc.update_role(role=role, name=name, role_type=role_type, level=level)
+    return rc.update_role(role=role, name=name, role_type=role_type, level=level)

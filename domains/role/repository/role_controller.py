@@ -15,7 +15,7 @@ class RoleController(object):
 
     def get_roles(self, keys: List[str] = [],ids: List[int] = [], name: str = None,
                   offset: int=None, limit: int=None,role_type: RoleType = None,
-                  disable: RoleDisable = None, level: int = 0) -> List[Role]:
+                  disable: RoleDisable = None, level: int = None) -> List[Role]:
         if not any([keys, ids, name, role_type, disable, level]):
             return []
         query = self.session.query(Role)
