@@ -48,12 +48,10 @@ class RoleController(object):
         return roles
 
     def update_role(self, role: Role, name: str=None,
-                  role_type: RoleType = RoleType.normal, level: int = None, password: str=None) -> bool:
+                  role_type: RoleType = RoleType.normal, level: int = None) -> bool:
         role.modifiedtime = time.localtime(time.time())
         if not role:
             return False
-        if password:
-            role.password = password
         if name:
             role.name = name
         if role_type:

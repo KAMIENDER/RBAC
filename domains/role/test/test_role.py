@@ -3,7 +3,7 @@ import sys
 from unittest import TestCase
 
 sys.path.append(os.getcwd() + '/../../../')
-from domains.role.respository.role_controller import get_role_controller
+from domains.role.repository.role_controller import get_role_controller
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 
