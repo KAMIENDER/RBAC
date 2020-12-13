@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Set
 
 from pydantic.main import BaseModel
 
@@ -57,7 +57,7 @@ def create_role(role: RoleModel) -> Role:
     if not item_facade.create_role(key=role.key, extra=role.extra):
         return None
     new_role = rc.create_role(name=role.name, key=role.key, level=role.level,
-                          role_type=RoleType(role.type))
+                              role_type=RoleType(role.type))
     if not new_role:
         item_facade.disable_items(keys=[role.key])
         return None
@@ -70,14 +70,15 @@ def create_role(role: RoleModel) -> Role:
 
 def get_roles(
         keys: List[str] = None, name: str = None, level: int = None,
-        role_type: RoleType = None, disable: RoleDisable = RoleDisable.able)\
+        role_type: RoleType = None, disable: RoleDisable = RoleDisable.able) \
         -> List[Role]:
     roles = rc.get_roles(keys=keys, name=name, role_type=role_type, disable=disable, level=level)
     return roles
 
 
 def delete_roles(roles: List[Role]) -> bool:
-    return rc.disable_roles(roles) and item_facade.disable_items([role.key for role in roles], item_type=item_facade.ItemType.role)
+    return rc.disable_roles(roles) and item_facade.disable_items([role.key for role in roles],
+                                                                 item_type=item_facade.ItemType.role)
 
 
 def update_role(role: Role, name: str = None,
@@ -85,27 +86,44 @@ def update_role(role: Role, name: str = None,
     return rc.update_role(role=role, name=name, role_type=role_type, level=level)
 
 
-def delete_roles_members(role_keys: List[str], user_keys: List[str]) -> bool:
+def delete_roles_members(role_keys: List[str], item_keys: List[str], item_type: item_facade.ItemType) -> bool:
     return item_facade.disable_old_refs(
         main_keys=role_keys, main_type=item_facade.ItemType.role,
-        attach_keys=user_keys, attach_type=item_facade.ItemType.user)
+        attach_keys=item_keys, attach_type=item_type)
 
 
-def set_roles_members(role_keys: List[str], user_keys: List[str]) -> bool:
-    if not delete_roles_members(role_keys, user_keys):
+def set_roles_members(role_keys: List[str], item_keys: List[str], item_type: item_facade.ItemType) -> bool:
+    if not delete_roles_members(role_keys, item_keys, item_type):
         return False
     return item_facade.attach_in_items_to_mains(
         main_keys=role_keys, main_type=item_facade.ItemType.role,
-        attach_keys=user_keys, attach_type=item_facade.ItemType.user)
+        attach_keys=item_keys, attach_type=item_type)
 
 
-def get_roles_members(role_keys: List[str], dsiable: item_facade.ItemRefDisable = item_facade.ItemRefDisable.able)\
+def get_roles_members_direct(
+        role_keys: List[str], item_type: item_facade.ItemType,
+        disable: item_facade.ItemRefDisable = item_facade.ItemRefDisable.able) \
         -> Dict[str, List[str]]:
     return item_facade.get_items_attached_to_in_items(
-        main_keys=role_keys, attach_item_type=item_facade.ItemType.user,
-        disable=dsiable, main_item_type=item_facade.ItemType.role)
+        main_keys=role_keys, attach_item_type=item_type,
+        disable=disable, main_item_type=item_facade.ItemType.role)
 
 
 def judge_users_owned_roles(user_keys: List[str], role_keys: List[str]) -> Dict[str, List[str]]:
     return item_facade.judge_have_ref(main_keys=user_keys, main_type=item_facade.ItemType.user,
-                               attach_keys=role_keys, attach_type=item_facade.ItemType.role)
+                                      attach_keys=role_keys, attach_type=item_facade.ItemType.role)
+
+
+def get_role_members_flatten(role_key: List[str], role_member_keys: List[str], user_member_keys: List[str]) -> Dict[str, List[str]]:
+    now_role_member_keys = get_roles_members_direct(role_keys=[role_key], item_type=item_facade.ItemType.role)[role_key]
+    now_user_keys = get_roles_members_direct(role_keys=[role_key], item_type=item_facade.ItemType.user)[role_key]
+    user_member_keys.extend(now_user_keys)
+    delta_role_member_keys = list(set(now_role_member_keys) - set(role_member_keys))
+    role_member_keys.extend(delta_role_member_keys)
+    for now_role_key in delta_role_member_keys:
+        get_role_members_flatten(now_role_key, role_member_keys, user_member_keys)
+    return {
+        'roles': role_member_keys,
+        'users': user_member_keys
+    }
+

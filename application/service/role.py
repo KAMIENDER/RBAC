@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from flask import request, jsonify
+from flask import request
 from flask_restful import Resource
 from pydantic.main import BaseModel
 
@@ -125,12 +125,13 @@ class RoleOwnerResource(Resource):
                    }, 500
 
 
-class RoleMemberResource(RBACResource):
-    # 更新成员（替换的方式）
+class RoleMemberDirctResource(RBACResource):
+    # 更新成员包括user和role（替换的方式）
     def post(self):
         args = request.get_json()
         keys = args.get("keys", [])
         user_keys = args.get("user_keys", [])
+        role_keys = args.get("role_keys", [])
         if not keys:
             return {
                        'message': 'ok'
@@ -140,7 +141,14 @@ class RoleMemberResource(RBACResource):
             return {
                        'message': 'you are not some roles owner'
                    }, 403
-        if not role_facade.set_roles_members(role_keys=keys, user_keys=user_keys):
+
+        if user_keys and not role_facade.set_roles_members(
+                role_keys=keys, keys=user_keys, item_type=role_facade.item_facade.ItemType.user):
+            return {
+                       'message': 'set roles members fail'
+                   }, 500
+        if role_keys and not role_facade.set_roles_members(
+                role_keys=keys, keys=role_keys, item_type=role_facade.item_facade.ItemType.role):
             return {
                        'message': 'set roles members fail'
                    }, 500
@@ -148,15 +156,31 @@ class RoleMemberResource(RBACResource):
                    'message': "ok"
                }, 200
 
-    # 获取现有成员
+    # 获取现有成员，包括user和role
     def get(self):
         keys = request.args.getlist("keys", type=str)
         disable = request.args.get('disable', type=int, default=0)
         disable = ItemRefDisable(disable)
         owner_key = request.authorization.username
-        if len(role_facade.judge_users_owned_roles(user_keys=[owner_key], role_keys=keys)[owner_key]) != len(keys) or not keys:
+        out = dict()
+        if len(role_facade.judge_users_owned_roles(user_keys=[owner_key], role_keys=keys)[owner_key]) != len(keys) \
+                or not keys:
             return {
                        'message': 'you are not some roles owner'
                    }, 403
-        out = role_facade.get_roles_members(role_keys=keys, dsiable=disable)
+        out['users'] = role_facade.get_roles_members_direct(
+            role_keys=keys, disable=disable, item_type=role_facade.item_facade.ItemType.user)
+        out['roles'] = role_facade.get_roles_members_direct(
+            role_keys=keys, item_type=role_facade.item_facade.ItemType.role, disable=disable)
+        return out, 200
+
+
+class RoleMemberFlattenResource(RBACResource):
+    def get(self):
+        keys = request.args.get('role_keys', type=list, default=[])
+        out = dict()
+        for key in keys:
+            role_member_keys = list()
+            user_member_keys = list()
+            out[key] = role_facade.get_role_members_flatten(keys, role_member_keys, user_member_keys)
         return out, 200
