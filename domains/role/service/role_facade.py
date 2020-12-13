@@ -83,3 +83,29 @@ def delete_roles(roles: List[Role]) -> bool:
 def update_role(role: Role, name: str = None,
                 role_type: RoleType = None, level: int = None) -> bool:
     return rc.update_role(role=role, name=name, role_type=role_type, level=level)
+
+
+def delete_roles_members(role_keys: List[str], user_keys: List[str]) -> bool:
+    return item_facade.disable_old_refs(
+        main_keys=role_keys, main_type=item_facade.ItemType.role,
+        attach_keys=user_keys, attach_type=item_facade.ItemType.user)
+
+
+def set_roles_members(role_keys: List[str], user_keys: List[str]) -> bool:
+    if not delete_roles_members(role_keys, user_keys):
+        return False
+    return item_facade.attach_in_items_to_mains(
+        main_keys=role_keys, main_type=item_facade.ItemType.role,
+        attach_keys=user_keys, attach_type=item_facade.ItemType.user)
+
+
+def get_roles_members(role_keys: List[str], dsiable: item_facade.ItemRefDisable = item_facade.ItemRefDisable.able)\
+        -> Dict[str, List[str]]:
+    return item_facade.get_items_attached_to_in_items(
+        main_keys=role_keys, attach_item_type=item_facade.ItemType.user,
+        disable=dsiable, main_item_type=item_facade.ItemType.role)
+
+
+def judge_users_owned_roles(user_keys: List[str], role_keys: List[str]) -> Dict[str, List[str]]:
+    return item_facade.judge_have_ref(main_keys=user_keys, main_type=item_facade.ItemType.user,
+                               attach_keys=role_keys, attach_type=item_facade.ItemType.role)

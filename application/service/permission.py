@@ -113,7 +113,7 @@ class PermissionAuthResource(RBACResource):
         permission_keys = args.get("permission_keys") or list()
         temp = judge_permissions_items_owned(permission_keys, [owner_key], ItemType.user)
         test = temp[owner_key]
-        if len(test) != len(permission_keys):
+        if not permission_keys or len(test) != len(permission_keys):
             return {
                 'message': 'you are not some permissions owner'
             }, 403
@@ -140,11 +140,13 @@ class PermissionAuthResource(RBACResource):
 
 
 class PermissionUpdateResource(RBACResource):
+    # 更新权限信息，包括owner
     def post(self):
         args = request.get_json()
         owner_key = request.authorization.username
         permission_keys = args.get("permission_keys", [])
-        if len(judge_permissions_items_owned(permission_keys, [owner_key], ItemType.user)[owner_key]) !=\
+        if not permission_keys or \
+                len(judge_permissions_items_owned(permission_keys, [owner_key], ItemType.user)[owner_key]) !=\
                 len(permission_keys):
             return {
                        'message': 'you are not some permissions owner'

@@ -5,9 +5,11 @@ from flask import request, jsonify
 from flask_restful import Resource
 from pydantic.main import BaseModel
 
+from domains.item.entity.const import ItemRefDisable
 from domains.role.entity.value import RoleType
 from domains.role.service.role_facade import create_role, get_roles, update_role
 import domains.role.service.role_facade as role_facade
+from infrastructure.config.before_request import RBACResource
 
 
 class RoleResource(Resource):
@@ -92,11 +94,16 @@ class RoleOwnerResource(Resource):
         try:
             keys = request.args.getlist('keys', type=str)
             roles = role_facade.get_roles(keys=keys)
+            if not roles:
+                return {
+                    'message': f"not roles"
+                }, 400
+
             out = role_facade.get_roles_owners(roles=roles)
         except Exception as e:
             return {
-                'message': f"something error: {e}"
-            }, 500
+                       'message': f"something error: {e}"
+                   }, 500
         return out, 200
 
     def post(self):
@@ -110,9 +117,46 @@ class RoleOwnerResource(Resource):
                            'message': "ok"
                        }, 200
             return {
-                'message': "update role owner fail"
-            }, 500
+                       'message': "update role owner fail"
+                   }, 500
         except Exception as e:
             return {
                        'message': f"something error: {e}"
                    }, 500
+
+
+class RoleMemberResource(RBACResource):
+    # 更新成员（替换的方式）
+    def post(self):
+        args = request.get_json()
+        keys = args.get("keys", [])
+        user_keys = args.get("user_keys", [])
+        if not keys:
+            return {
+                       'message': 'ok'
+                   }, 200
+        owner_key = request.authorization.username
+        if len(role_facade.judge_users_owned_roles(user_keys=[owner_key], role_keys=keys)[owner_key]) != len(keys) or not keys:
+            return {
+                       'message': 'you are not some roles owner'
+                   }, 403
+        if not role_facade.set_roles_members(role_keys=keys, user_keys=user_keys):
+            return {
+                       'message': 'set roles members fail'
+                   }, 500
+        return {
+                   'message': "ok"
+               }, 200
+
+    # 获取现有成员
+    def get(self):
+        keys = request.args.getlist("keys", type=str)
+        disable = request.args.get('disable', type=int, default=0)
+        disable = ItemRefDisable(disable)
+        owner_key = request.authorization.username
+        if len(role_facade.judge_users_owned_roles(user_keys=[owner_key], role_keys=keys)[owner_key]) != len(keys) or not keys:
+            return {
+                       'message': 'you are not some roles owner'
+                   }, 403
+        out = role_facade.get_roles_members(role_keys=keys, dsiable=disable)
+        return out, 200

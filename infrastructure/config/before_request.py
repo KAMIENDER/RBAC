@@ -35,4 +35,5 @@ def catch_exception(func):
 
 
 class RBACResource(Resource):
-    method_decorators = [catch_exception]
+    # method_decorators = [catch_exception]
+    pass
