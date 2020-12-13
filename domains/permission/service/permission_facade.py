@@ -31,6 +31,18 @@ def get_permissions(keys: List[str] = [], name: str = None, level: int=None, dis
     return pc.get_permissions(keys=keys,name=name,level=level,disable=disable)
 
 
+def update_permissions(keys: List[str] = [], name: str = None, level: int = None, disable: PermissionDisable = None):
+    permissions = pc.get_permissions(keys=keys)
+    for permission in permissions:
+        pc.update_permission(permission, name=name, level=level)
+        if disable:
+            if disable == PermissionDisable.disable:
+                pc.disable_permission(permission)
+            else:
+                pc.enable_permission(permission)
+    return True
+
+
 def get_permissions_users_ownerd(user_keys: List[str] = [], disable: PermissionDisable = None):
     user_key2permission_key = get_items_attached_to_in_items(
         main_keys=user_keys, attach_item_type=ItemType.permission, main_item_type=ItemType.user)
@@ -75,7 +87,8 @@ def clear_permission_owners(permission_keys: List[str]) -> bool:
 
 
 def update_permissions_owners(permission_keys: List[str], owner_keys: List[str]) -> bool:
-    return clear_permission_owners(permission_keys) and set_permissions_owners(permission_keys, owner_keys)
+    tets = clear_permission_owners(permission_keys)
+    return  set_permissions_owners(permission_keys, owner_keys)
 
 
 def grant_permissions_to_items(permission_keys: List[str], item_keys: List[str], item_type: ItemType) -> bool:

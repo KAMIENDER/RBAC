@@ -1,6 +1,6 @@
 import logging
 
-from flask import request
+from flask import request, jsonify
 from flask_restful import Resource
 from pydantic import BaseModel
 
@@ -133,6 +133,38 @@ class PermissionAuthResource(RBACResource):
             if not result:
                 return {
                        'message': "grant permissions to roles error"
+                   }, 500
+        return {
+            'message': 'ok'
+        }, 200
+
+
+class PermissionUpdateResource(RBACResource):
+    def post(self):
+        args = request.get_json()
+        owner_key = request.authorization.username
+        permission_keys = args.get("permission_keys", [])
+        if len(judge_permissions_items_owned(permission_keys, [owner_key], ItemType.user)[owner_key]) !=\
+                len(permission_keys):
+            return {
+                       'message': 'you are not some permissions owner'
+                   }, 403
+        permission_name = args.get("permission_name", None)
+        permission_level = args.get("permission_level", None)
+        permission_disable = args.get("permission_disable", None)
+        owner_keys = args.get("owner_keys", [])
+        if permission_disable:
+            permission_disable = PermissionDisable(permission_disable)
+        if owner_keys:
+            if not update_permissions_owners(permission_keys=permission_keys, owner_keys=owner_keys):
+                return {
+                    'message': 'update owner fail'
+                }, 500
+
+        if not update_permissions(
+            keys=permission_keys, name=permission_name, level=permission_level, disable=permission_disable):
+            return {
+                       'message': 'update owner fail'
                    }, 500
         return {
             'message': 'ok'

@@ -320,7 +320,7 @@ def judge_have_ref(main_keys: List[str], attach_keys: List[str], main_type: Item
     mainid2key = {item.id: item.key for item in main_items}
     attach_items = item_controller.get_items(item_type=attach_type, keys=attach_keys)
     attachid2key = {item.id: item.key for item in attach_items}
-    refs = item_controller.get_item_refs(main_items=main_items, attach_items=attach_items)
+    refs = item_controller.get_item_refs(main_items=main_items, attach_items=attach_items, disable=ItemRefDisable.able)
     out = defaultdict(list)
     for ref in refs:
         out[mainid2key[ref.main_id]].append(attachid2key[ref.attach_id])
