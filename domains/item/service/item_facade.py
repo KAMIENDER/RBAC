@@ -285,6 +285,7 @@ def attach_in_items_to_mains(attach_keys: List[str], main_keys: List[str], attac
 
 
 def set_permissions_owners(user_keys: List[str], permission_keys: List[str]) -> bool:
+
     return attach_in_items_to_mains(
         attach_keys=permission_keys, main_keys=user_keys, attach_type=ItemType.permission, main_type=ItemType.user)
 
@@ -311,6 +312,18 @@ def get_refs_by_attach_keys_and_main_keys(
     out = defaultdict(list)
     for ref in refs:
         out[main_id2main[ref.main_id].key].append(attach_id2attach[ref.attach_id].key)
+    return out
+
+
+def judge_have_ref(main_keys: List[str], attach_keys: List[str], main_type: ItemType, attach_type: ItemType) -> Dict[str, List[str]]:
+    main_items = item_controller.get_items(item_type=main_type, keys=main_keys)
+    mainid2key = {item.id: item.key for item in main_items}
+    attach_items = item_controller.get_items(item_type=attach_type, keys=attach_keys)
+    attachid2key = {item.id: item.key for item in attach_items}
+    refs = item_controller.get_item_refs(main_items=main_items, attach_items=attach_items)
+    out = defaultdict(list)
+    for ref in refs:
+        out[mainid2key[ref.main_id]].append(attachid2key[ref.attach_id])
     return out
 
 

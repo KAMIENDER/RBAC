@@ -41,6 +41,15 @@ def get_permissions_users_ownerd(user_keys: List[str] = [], disable: PermissionD
     return permissions
 
 
+def get_permissions_users_had(user_keys: List[str] = [], disable: PermissionDisable = None):
+    user_key2permission_key = get_items_have_in_items(
+        attach_keys=user_keys, attach_item_type=ItemType.user, main_item_type=ItemType.permission)
+    permission_keys = list()
+    for _, permission_keys in user_key2permission_key.items():
+        permission_keys.extend(permission_keys)
+    permissions = get_permissions(keys=permission_keys, disable=disable)
+    return permissions
+
 
 def set_permissions_owners(permission_keys: List[str], owner_keys: List[str]) -> bool:
     if not owner_keys:
@@ -51,14 +60,35 @@ def set_permissions_owners(permission_keys: List[str], owner_keys: List[str]) ->
     return item_facade.set_permissions_owners(
         user_keys=[owner.key for owner in owners], permission_keys=permission_keys)
 
+
 def delete_permissions_owners(permission_keys: List[str], owner_keys: List[str]) -> bool:
     return item_facade.delete_roles_or_users_owned_permissions(
         permission_keys=permission_keys, user_keys=owner_keys)
 
 
-def update_permissions_owners(permission_keys: List[str], owner_keys: List[str]) -> bool:
+def clear_permission_owners(permission_keys: List[str]) -> bool:
     permissionkey2ownerkey = item_facade.get_items_have_in_items(
         attach_keys=permission_keys, attach_item_type=ItemType.permission, main_item_type=ItemType.user)
     for key, value in dict(permissionkey2ownerkey).items():
         item_facade.delete_roles_or_users_owned_permissions(permission_keys=[key], user_keys=value)
-    return set_permissions_owners(permission_keys, owner_keys)
+    return True
+
+
+def update_permissions_owners(permission_keys: List[str], owner_keys: List[str]) -> bool:
+    return clear_permission_owners(permission_keys) and set_permissions_owners(permission_keys, owner_keys)
+
+
+def grant_permissions_to_items(permission_keys: List[str], item_keys: List[str], item_type: ItemType) -> bool:
+    return item_facade.attach_in_items_to_mains(
+        main_keys=permission_keys, attach_keys=item_keys, main_type=ItemType.permission, attach_type=item_type)
+
+
+def delete_permissions_items_had(permission_keys: List[str], item_keys: List[str], item_type: ItemType) -> bool:
+    return item_facade.disable_old_refs(
+        main_keys=permission_keys, attach_keys=item_keys, main_type=ItemType.permission, attach_type=item_type)
+
+
+def judge_permissions_items_owned(permission_keys: List[str], item_keys: List[str], item_type: ItemType)\
+        -> Dict[str, List[str]]:
+    return item_facade.judge_have_ref(
+        main_keys=item_keys, main_type=item_type, attach_keys=permission_keys, attach_type=ItemType.permission)
