@@ -21,7 +21,7 @@ class PermissionModel(BaseModel):
 
 
 class PermissionBasicResource(Resource):
-    #  新建权限
+    #  新建权限，目前只支持user作为owner
     def post(self):
         args = request.get_json()
         try:
@@ -47,7 +47,7 @@ class PermissionBasicResource(Resource):
             'message': 'create failed'
         }
 
-    # 查找权限
+    # 查找权限，owner是user
     def get(self):
         args = request.args
         try:
@@ -65,7 +65,7 @@ class PermissionBasicResource(Resource):
         try:
             out = list()
             if owner_keys:
-                owner_permissions = get_permissions_users_ownerd(user_keys=owner_keys, disable=disable)
+                owner_permissions = get_permissions_items_ownerd(item_type=ItemType.user, user_keys=owner_keys, disable=disable)
                 permission_keys.extend([permission.key for permission in owner_permissions])
             permissions = get_permissions(
                 keys=permission_keys, name=permission_name, level=permission_level, disable=disable)
@@ -80,20 +80,28 @@ class PermissionBasicResource(Resource):
 
 
 class PermissionAuthResource(RBACResource):
-    # 查询用户拥有的权限
+    # 查询用户、角色拥有的权限
     def get(self):
         args = request.args
         try:
             user_keys = args.getlist("user_keys", type=str)
+            role_keys = args.getlist("role_keys", type=str)
             permission_keys = args.getlist('permission_keys', type=str) or []
             permission_name = args.get('permission_name', type=str, default='')
             permission_level = args.get('permission_level', type=int)
             disable = args.get('permission_disable', type=int)
             out = list()
             if user_keys:
-                had_permissions = get_permissions_users_had(user_keys=user_keys, disable=disable)
+                had_permissions = get_permissions_items_had(item_type=ItemType.user, user_keys=user_keys, disable=disable)
                 permission_keys.extend([permission.key for permission in had_permissions])
-                owner_permissions = get_permissions_users_ownerd(user_keys=user_keys, disable=disable)
+                owner_permissions = get_permissions_items_ownerd(item_type=ItemType.user, user_keys=user_keys, disable=disable)
+                permission_keys.extend([permission.key for permission in owner_permissions])
+            if role_keys:
+                had_permissions = get_permissions_items_had(item_type=ItemType.role, user_keys=role_keys,
+                                                            disable=disable)
+                permission_keys.extend([permission.key for permission in had_permissions])
+                owner_permissions = get_permissions_items_ownerd(item_type=ItemType.role, user_keys=role_keys,
+                                                                 disable=disable)
                 permission_keys.extend([permission.key for permission in owner_permissions])
             permissions = get_permissions(
                 keys=permission_keys, name=permission_name, level=permission_level, disable=disable)
@@ -140,7 +148,7 @@ class PermissionAuthResource(RBACResource):
 
 
 class PermissionUpdateResource(RBACResource):
-    # 更新权限信息，包括owner
+    # 更新权限信息，包括owner(目前只支持user作为owner）
     def post(self):
         args = request.get_json()
         owner_key = request.authorization.username

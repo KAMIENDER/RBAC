@@ -43,21 +43,21 @@ def update_permissions(keys: List[str] = [], name: str = None, level: int = None
     return True
 
 
-def get_permissions_users_ownerd(user_keys: List[str] = [], disable: PermissionDisable = None):
-    user_key2permission_key = get_items_attached_to_in_items(
-        main_keys=user_keys, attach_item_type=ItemType.permission, main_item_type=ItemType.user)
+def get_permissions_items_ownerd(item_type: item_facade.ItemType, item_keys: List[str] = [], disable: PermissionDisable = None):
+    item_key2permission_key = get_items_attached_to_in_items(
+        main_keys=item_keys, attach_item_type=ItemType.permission, main_item_type=item_type)
     permission_keys = list()
-    for _, permission_keys in user_key2permission_key.items():
+    for _, permission_keys in item_key2permission_key.items():
         permission_keys.extend(permission_keys)
     permissions = get_permissions(keys=permission_keys, disable=disable)
     return permissions
 
 
-def get_permissions_users_had(user_keys: List[str] = [], disable: PermissionDisable = None):
-    user_key2permission_key = get_items_have_in_items(
-        attach_keys=user_keys, attach_item_type=ItemType.user, main_item_type=ItemType.permission)
+def get_permissions_items_had(item_type: item_facade.ItemType, item_keys: List[str] = [], disable: PermissionDisable = None):
+    item_key2permission_key = get_items_have_in_items(
+        attach_keys=item_keys, attach_item_type=item_type, main_item_type=ItemType.permission)
     permission_keys = list()
-    for _, permission_keys in user_key2permission_key.items():
+    for _, permission_keys in item_key2permission_key.items():
         permission_keys.extend(permission_keys)
     permissions = get_permissions(keys=permission_keys, disable=disable)
     return permissions
