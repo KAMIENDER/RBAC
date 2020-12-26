@@ -2,6 +2,7 @@ import ply.lex as lex
 
 tokens = (
     'NUM',
+    'STR',
     'ID',
     'PLUS',
     'MINUS',
@@ -32,6 +33,7 @@ t_LT = r'>'
 t_ST = r'<'
 t_LE = r'(>=|=>)'
 t_SE = r'(<=|=<)'
+t_STR = r'[\"].*?[\"]'
 
 
 # A regular expression rule with some action code
@@ -65,12 +67,11 @@ def t_ID(t):
 
 lexer = lex.lex()
 
-
 # if __name__ == '__main__':
-#     test = MyLexer()
-#     test.input("sdfs & 1")
+#
+#     lexer.input('"sdfsd""fsdf"')
 #     while True:
-#         token = test.token()
+#         token = lexer.token()
 #         if not token:
 #             break
 #         print(token)

@@ -12,3 +12,5 @@ domains/item/repository/__pycache__
 domains/item/service/__pycache__
 *.pyc
 domains/lex/parser.out
+domains/lex/parse_log.txt
+domains/lex/parsetab.py
