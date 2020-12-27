@@ -33,13 +33,12 @@ t_LT = r'>'
 t_ST = r'<'
 t_LE = r'(>=|=>)'
 t_SE = r'(<=|=<)'
-t_STR = r'[\"].*?[\"]'
 
 
 # A regular expression rule with some action code
 def t_NUM(t):
-    r'\d+'
-    t.value = int(t.value)
+    r'(\+|-)?(([0-9]*\.[0-9]*)|([0-9]+))'
+    t.value = float(t.value)
     return t
 
 
@@ -65,11 +64,16 @@ def t_ID(t):
     return t
 
 
+def t_STR(t):
+    r'[\"].*?[\"]'
+    t.value = str(t.value[1:-1])
+    return t
+
+
 lexer = lex.lex()
 
 # if __name__ == '__main__':
-#
-#     lexer.input('"sdfsd""fsdf"')
+#     lexer.input('.3')
 #     while True:
 #         token = lexer.token()
 #         if not token:

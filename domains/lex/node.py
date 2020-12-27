@@ -1,40 +1,67 @@
 class BaseNode(object):
-    kind = 'base'
 
     def __init__(self, value):
-        self.__value = value
+        self._kind = 'base'
+        self._value = value
 
+    @property
     def value(self):
-        return self.__value
+        return self._value
+
+    @property
+    def kind(self):
+        return self._kind
+
+    def set_value(self, value):
+        self._value = value
+
+    def __str__(self):
+        return f"kind: {self.kind}, value: {self.value}"
 
 
-class Number(BaseNode):
-    kind = 'Num'
+class Num(BaseNode):
+    def __init__(self, value):
+        super(Num, self).__init__(value)
+        self._kind = 'Num'
 
 
 class Id(BaseNode):
-    kind = 'Id'
+
+    def __init__(self, name: str):
+        super(Id, self).__init__(None)
+        self._kind = 'Id'
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
 
 
 class Str(BaseNode):
-    kind = 'Str'
+    def __init__(self, value):
+        super(Str, self).__init__(value)
+        self._kind = 'Str'
 
 
 class Operation(BaseNode):
-    kind = 'Operation'
 
-    def __init__(self, category: str, left: BaseNode, right: BaseNode, value = None):
-        self.__category = category
-        self.__left = left
-        self.__right = right
+    def __init__(self, category: str, left: BaseNode, right: BaseNode, value=None):
+        super(Operation, self).__init__(None)
+        self._kind = 'Operation'
+        self._category = category
+        self._left = left
+        self._right = right
         if value:
-            self.__value = value
+            self._value = value
 
+    @property
     def category(self):
-        return self.__category
+        return self._category
 
+    @property
     def left(self):
-        return self.__left
+        return self._left
 
+    @property
     def right(self):
-        return self.__right
+        return self._right
