@@ -1,8 +1,50 @@
+from enum import Enum
+
+
+class NodeKind(Enum):
+    Base = 'base'
+    Num = 'Num'
+    Id = 'Id'
+    Str = 'Str'
+    Operation = 'Operation'
+
+
+class OperationCategory(Enum):
+    Mul = 'Mul'
+    Divide = 'Divide'
+    Minus = 'Minus'
+    Plus = 'Plus'
+    Or = 'Or'
+    And = 'And'
+    Eq = 'Eq'
+    St = 'St'
+    Se = 'Se'
+    Lt = 'Lt'
+    Le = 'Le'
+
+
+ExpressionOperations = [
+    OperationCategory.Or.value, OperationCategory.And.value
+]
+
+
+TermOperations = [
+    OperationCategory.St.value, OperationCategory.Se.value, OperationCategory.Lt.value, OperationCategory.Le.value,
+    OperationCategory.Eq.value, OperationCategory
+]
+
+NumOperations = [
+    OperationCategory.Mul.value, OperationCategory.Plus.value, OperationCategory.Minus.value,
+    OperationCategory.Divide.value
+]
+
+
 class BaseNode(object):
 
     def __init__(self, value):
         self._kind = 'base'
         self._value = value
+        self._extra = dict()
 
     @property
     def value(self):
@@ -17,6 +59,12 @@ class BaseNode(object):
 
     def __str__(self):
         return f"kind: {self.kind}, value: {self.value}"
+
+    def set_extra(self, key: str, value):
+        self._extra[key] = value
+
+    def get_extra(self, key: str):
+        return self._extra.get(key, None)
 
 
 class Num(BaseNode):

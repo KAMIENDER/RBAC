@@ -24,6 +24,11 @@ def create_permission(key: str, extra: str = None) -> Item:
     return item
 
 
+def create_attribute(key: str, extra: str = None) -> Item:
+    item = item_controller.create_item(key=key, item_type=ItemType.attribute, extra=extra)
+    return item
+
+
 def get_roles_member_keys(role_keys: List[str]) -> Dict[str, List[str]]:
     role_items = item_controller.get_items(item_type=ItemType.role, keys=role_keys)
     role_user_refs = item_controller.get_item_refs(main_items=role_items, disable=ItemRefDisable.able)
@@ -325,5 +330,9 @@ def judge_have_ref(main_keys: List[str], attach_keys: List[str], main_type: Item
     for ref in refs:
         out[mainid2key[ref.main_id]].append(attachid2key[ref.attach_id])
     return out
+
+
+def get_attributes_by_keys(keys: List[str], disable: ItemDisable = ItemRefDisable.able):
+    return item_controller.get_items(item_type=ItemType.attribute, keys=keys, disable=disable)
 
 

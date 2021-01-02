@@ -6,6 +6,7 @@ class ItemType(Enum):
     permission = 1
     role = 2
     resource = 3
+    attribute = 4
 
 
 class ItemDisable(Enum):

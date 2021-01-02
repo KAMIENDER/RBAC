@@ -1,7 +1,9 @@
 import logging
+from typing import List
+
 from ply import yacc as yacc
-from domains.lex.node import *
-from domains.lex.my_token import tokens
+from domains.lex.infra.node import *
+from domains.lex.infra.my_token import tokens
 
 '''
     前后的顺序对解析而言是有影响的，
@@ -19,6 +21,8 @@ def p_expression_le(p: yacc.YaccProduction):
         p[0].set_value(False)
         if p[1].value >= p[3].value:
             p[0].set_value(True)
+    elif p[1].kind == NodeKind.Id.value and p[3].kind == NodeKind.Id.value and p[1].name == p[3].name:
+        p[0].set_value(True)
 
 
 def p_expression_lt(p: yacc.YaccProduction):
@@ -39,6 +43,8 @@ def p_expression_se(p: yacc.YaccProduction):
         p[0].set_value(False)
         if p[1].value <= p[3].value:
             p[0].set_value(True)
+    elif p[1].kind == NodeKind.Id.value and p[3].kind == NodeKind.Id.value and p[1].name == p[3].name:
+        p[0].set_value(True)
 
 
 def p_expression_st(p: yacc.YaccProduction):
@@ -59,6 +65,8 @@ def p_expression_eq(p: yacc.YaccProduction):
         p[0].set_value(False)
         if p[1].value == p[3].value:
             p[0].set_value(True)
+    elif p[1].kind == NodeKind.Id.value and p[3].kind == NodeKind.Id.value and p[1].name == p[3].name:
+        p[0].set_value(True)
 
 
 def p_expression_and(p: yacc.YaccProduction):
@@ -172,6 +180,21 @@ precedence = (
 )
 
 
+def visit_tree(node: BaseNode, before=None, after=None, *args, **kws) -> List[str]:
+    if before is not None:
+        before(node, *args, **kws)
+    if node.kind != NodeKind.Operation.value:
+        if after is not None:
+            after(node, *args, **kws)
+        return
+    if node.value is None:
+        visit_tree(node.left, before, after, *args, **kws)
+        visit_tree(node.right, before, after, *args, **kws)
+    if after is not None:
+        after(node, *args, **kws)
+    return
+
+
 class YaccAnalyzer():
     def __init__(self, debug: bool = False, level: int = logging.DEBUG, filename: str = "parse_log.txt",
                  filemode: str = 'w', format: str = "%(filename)10s:%(lineno)4d:%(message)s"):
@@ -184,19 +207,18 @@ class YaccAnalyzer():
                 format=format
             )
             self.logger = logging.getLogger()
-            self.__parser = yacc.yacc(debug=True)
+            self._parser = yacc.yacc(debug=True)
         else:
-            self.__parser = yacc.yacc()
+            self._parser = yacc.yacc()
 
-    def parse(self, in_str: str):
+    def parse(self, in_str: str) -> BaseNode:
         if self.debug:
-            return self.__parser.parse(in_str, debug=self.logger)
-        return self.__parser.parse(in_str)
+            return self._parser.parse(in_str, debug=self.logger)
+        return self._parser.parse(in_str)
 
-    def ast_tree(self, in_str) -> BaseNode:
+    def get_ast_tree(self, in_str) -> BaseNode:
         return self.parse(in_str)
 
-
-if __name__ == '__main__':
-
-    test = YaccAnalyzer(debug=True).parse('a = "fsdf" + 1')
+# if __name__ == '__main__':
+#
+#     test = YaccAnalyzer(debug=True).parse('a = "fsdf" + 1')

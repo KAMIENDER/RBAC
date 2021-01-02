@@ -14,3 +14,6 @@ domains/item/service/__pycache__
 domains/lex/parser.out
 domains/lex/parse_log.txt
 domains/lex/parsetab.py
+domains/lex/infra/parser.out
+domains/lex/infra/parse_log.txt
+domains/lex/infra/parsetab.py
