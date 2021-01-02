@@ -78,7 +78,7 @@ def build_query_after_visit(node: BaseNode, key2id: Dict[str, int]):
 
 
 class SyntaxAnalyzeServiceSupplier(object):
-    def __init__(self, in_str, debug: bool = False):
+    def __init__(self, in_str: str, debug: bool = False):
         self._analyzer = YaccAnalyzer(debug)
         self._Sql = None
         try:
@@ -103,14 +103,16 @@ class SyntaxAnalyzeServiceSupplier(object):
         return self._name_to_attr.values()
 
     def convert_to_sql(self):
+        if self._tree.value:
+            raise ValueError('[SyntaxAnalyzeServiceSupplier.convert_to_sql] dangerous sql')
         if not self._Sql:
             visit_tree(self._tree, None, build_query_after_visit, self._key2attr)
-            self._Sql = 'where ' + self._tree.get_extra(BuildKey)
+            self._Sql = self._tree.get_extra(BuildKey)
         return self._Sql
 
 
-if __name__ == '__main__':
-    supplier = SyntaxAnalyzeServiceSupplier('(a <= 1 & b = 2) | c = 3', True)
-    tokens = supplier.attr_names
-    sql = supplier.convert_to_sql()
-    print(tokens)
+# if __name__ == '__main__':
+#     supplier = SyntaxAnalyzeServiceSupplier('(a <= 1 & b = 2) | c = 3', True)
+#     tokens = supplier.attr_names
+#     sql = supplier.convert_to_sql()
+#     print(tokens)
