@@ -336,3 +336,7 @@ def get_attributes_by_keys(keys: List[str], disable: ItemDisable = ItemRefDisabl
     return item_controller.get_items(item_type=ItemType.attribute, keys=keys, disable=disable)
 
 
+def get_attributes_by_like_key(key: str, disable: ItemDisable = ItemRefDisable.able):
+    return item_controller.get_items(item_type=ItemType.attribute, like_key=key, disable=disable)
+
+

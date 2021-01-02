@@ -44,12 +44,14 @@ class ItemController(object):
             return False
         return True
 
-    def get_items(self, item_type: ItemType, keys: List[str] = None, ids: int = None,
+    def get_items(self, item_type: ItemType, keys: List[str] = None, like_key: str = None, ids: int = None,
                   disable: ItemDisable = ItemDisable.able, extra: str = None, offset: int = None, limit: int = None)\
             -> List[Item]:
-        if not any([item_type, keys, ids, disable, extra]):
+        if not any([item_type, keys, ids, disable, extra, like_key]):
             return []
         query = self.session.query(Item)
+        if like_key:
+            query = query.filter(Item.key.like('%'+like_key+'%'))
         if item_type:
             query = query.filter(Item.type == item_type.value)
         if disable:
