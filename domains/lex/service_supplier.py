@@ -1,5 +1,6 @@
 from typing import List, Dict
 
+from domains.item.models.item import Item
 from domains.lex.entity.const import BuildKey
 from domains.lex.infra.node import BaseNode, Operation, OperationCategory, Id, ExpressionOperations, TermOperations
 from domains.lex.infra.parser import YaccAnalyzer, visit_tree, NodeKind
@@ -47,13 +48,13 @@ def build_term_sql(node: Operation) -> str:
     return sql
 
 
-def build_query_after_visit(node: BaseNode, key2id: Dict[str, int]):
+def build_query_after_visit(node: BaseNode, key2attr: Dict[str, Item]):
     sql = ''
     if node.kind == NodeKind.Id.value:
         node: Id
-        if node.name not in key2id.keys():
+        if node.name not in key2attr.keys():
             raise ValueError(f"[build_query_after_visit] Id name not in attr key2id map")
-        sql = f'attach_id = {key2id[node.name]} and extra'
+        sql = f'attach_id = {key2attr[node.name].id} and extra'
     elif node.kind == NodeKind.Num.value:
         sql = str(node.value)
     elif node.kind == NodeKind.Str.value:
