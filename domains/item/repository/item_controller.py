@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from domains.item.entity.const import ItemType, ItemDisable, ItemRefDisable
@@ -148,12 +149,14 @@ class ItemController(object):
 
     def get_item_refs(self, main_items: List[Item] = [], attach_items: List[Item] = [],
                       disable: ItemRefDisable = None, extra: str = None,
-                      offset: int = None, limit: int = None) -> List[ItemRef]:
-        if not any([main_items, attach_items, disable, extra]):
+                      offset: int = None, limit: int = None, statement: str = None) -> List[ItemRef]:
+        if not any([main_items, attach_items, disable, extra, statement]):
             return []
         query = self.session.query(ItemRef)
         if disable:
             query = query.filter(ItemRef.disable == disable.value)
+        if statement:
+            query = query.filter(text(statement))
         if main_items:
             main_item_ids = [item.id for item in main_items]
             query = query.filter(ItemRef.main_id.in_(main_item_ids))

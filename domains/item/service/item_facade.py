@@ -340,3 +340,6 @@ def get_attributes_by_like_key(key: str, disable: ItemDisable = ItemRefDisable.a
     return item_controller.get_items(item_type=ItemType.attribute, like_key=key, disable=disable)
 
 
+def get_items_by_statement(statement: str, item_type: ItemType, disable: ItemDisable = ItemDisable.able) -> List[Item]:
+    refs = item_controller.get_item_refs(statement=statement)
+    return item_controller.get_items(item_type=item_type, ids=[ref.main_id for ref in refs], disable=disable)

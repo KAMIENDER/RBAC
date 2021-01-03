@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_restful import Api
 
-from application.service.attr import AttrBasicResource
+from application.service.attr import AttrBasicResource, AttrRelationResource
 from application.service.permission import PermissionBasicResource, PermissionAuthResource, PermissionUpdateResource
 from application.service.role import RoleResource, RoleUpdateResource, RoleOwnerResource, RoleMemberDirctResource
 from application.service.user import UserResource, UserUpdateResource
@@ -38,3 +38,4 @@ def register_role(app: Flask, pre_url: str = "/"):
 def register_attr(app: Flask, pre_url: str = "/"):
     api = Api(app)
     api.add_resource(AttrBasicResource, pre_url+'resource/')
+    api.add_resource(AttrRelationResource, pre_url+'relation/')
