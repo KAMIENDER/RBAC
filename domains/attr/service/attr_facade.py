@@ -14,8 +14,9 @@ def create_attr(key: str) -> bool:
     return False
 
 
-def get_attrs_by_key(keys: List[str], disable: AttrDisable = AttrDisable.able) -> List[Item]:
-    return item_facade.get_attributes_by_keys(keys, ItemDisable(disable.value))
+def get_attrs_by_key(like_key: str = None, keys: List[str] = None, disable: AttrDisable = AttrDisable.able)\
+        -> List[Item]:
+    return item_facade.get_attributes_by_keys(like_key=like_key, keys=keys, disable=ItemDisable(disable.value))
 
 
 def get_items_by_attr(expression: str, item_type: ItemType, disable: ItemDisable.able = None) -> List[Item]:

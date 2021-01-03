@@ -11,14 +11,14 @@ class AttrBasicResource(Resource):
         args = request.args
         try:
             attr_key = args.get("attr_key", type=str)
-            disable = args.get('disable', 1, type=int)
-            if disable:
+            disable = args.get('disable', 0, type=int)
+            if disable is not None:
                 disable = AttrDisable(disable)
         except:
             return {
                        'message': 'args error'
                    }, 400
-        out = [item.key for item in attr_facade.get_attributes_by_like_key(attr_key, disable)]
+        out = [item.key for item in attr_facade.get_attrs_by_key(like_key=attr_key, disable=disable)]
         return {
                    'attr_keys': out
                }, 200
@@ -57,7 +57,7 @@ class AttrRelationResource(Resource):
                 return {
                            'message': 'need more args'
                        }, 403
-            if disable:
+            if disable is not None:
                 disable = AttrDisable(disable)
         except:
             return {

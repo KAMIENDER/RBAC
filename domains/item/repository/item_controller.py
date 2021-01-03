@@ -55,7 +55,7 @@ class ItemController(object):
             query = query.filter(Item.key.like('%'+like_key+'%'))
         if item_type:
             query = query.filter(Item.type == item_type.value)
-        if disable:
+        if disable is not None:
             query = query.filter(Item.disable == disable.value)
         if keys:
             query = query.filter(Item.key.in_(keys))
@@ -153,7 +153,7 @@ class ItemController(object):
         if not any([main_items, attach_items, disable, extra, statement]):
             return []
         query = self.session.query(ItemRef)
-        if disable:
+        if disable is not None:
             query = query.filter(ItemRef.disable == disable.value)
         if statement:
             query = query.filter(text(statement))

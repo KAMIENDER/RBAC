@@ -332,8 +332,8 @@ def judge_have_ref(main_keys: List[str], attach_keys: List[str], main_type: Item
     return out
 
 
-def get_attributes_by_keys(keys: List[str], disable: ItemDisable = ItemRefDisable.able):
-    return item_controller.get_items(item_type=ItemType.attribute, keys=keys, disable=disable)
+def get_attributes_by_keys(like_key: str = None, keys: List[str] = None, disable: ItemDisable = ItemRefDisable.able):
+    return item_controller.get_items(like_key=like_key, item_type=ItemType.attribute, keys=keys, disable=disable)
 
 
 def get_attributes_by_like_key(key: str, disable: ItemDisable = ItemRefDisable.able):

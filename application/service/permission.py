@@ -56,7 +56,7 @@ class PermissionBasicResource(Resource):
             permission_name = args.get('permission_name', type=str, default='')
             permission_level = args.get('permission_level', type=int)
             disable = args.get('permission_disable', type=int)
-            if disable:
+            if disable is not None:
                 disable = PermissionDisable(disable)
         except Exception as e:
             return {

@@ -19,7 +19,7 @@ class UserController(object):
         query = self.session.query(User)
         if user_type:
             query = query.filter(User.type == user_type.value)
-        if disable:
+        if disable is not None:
             query = query.filter(User.disable == disable.value)
         if keys:
             query = query.filter(User.key.in_(keys))

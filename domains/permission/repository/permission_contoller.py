@@ -38,7 +38,7 @@ class PermissionController(object):
         if not any([keys, ids, name, disable, level, extra]):
             return []
         query = self.session.query(Permission)
-        if disable:
+        if disable is not None:
             query = query.filter(Permission.disable == disable.value)
         if keys:
             query = query.filter(Permission.key.in_(keys))

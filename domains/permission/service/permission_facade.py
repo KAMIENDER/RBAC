@@ -35,7 +35,7 @@ def update_permissions(keys: List[str] = [], name: str = None, level: int = None
     permissions = pc.get_permissions(keys=keys)
     for permission in permissions:
         pc.update_permission(permission, name=name, level=level)
-        if disable:
+        if disable is not None:
             if disable == PermissionDisable.disable:
                 pc.disable_permission(permission)
             else:

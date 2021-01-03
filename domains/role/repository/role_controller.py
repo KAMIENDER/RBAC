@@ -21,7 +21,7 @@ class RoleController(object):
         query = self.session.query(Role)
         if role_type:
             query = query.filter(Role.type == role_type.value)
-        if disable:
+        if disable is not None:
             query = query.filter(Role.disable == disable.value)
         if keys:
             query = query.filter(Role.key.in_(keys))
