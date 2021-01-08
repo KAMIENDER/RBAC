@@ -1,12 +1,14 @@
+from collections import defaultdict
 from typing import List, Dict, Set
 
 from pydantic.main import BaseModel
 
-from domains.role.entity.value import RoleType, RoleDisable
+from domains.role.entity.value import RoleType, RoleDisable, TreeKey, RoleMemberRoleKey, RoleMemberUserKey
 from domains.role.models.role import Role
 from domains.role.repository.role_controller import get_role_controller
 import domains.item.service.item_facade as item_facade
 import domains.user.service.facade as user_facade
+from infrastructure.config.redis import redis_client
 
 rc = get_role_controller()
 
@@ -93,11 +95,28 @@ def delete_roles_members(role_keys: List[str], item_keys: List[str], item_type: 
 
 
 def set_roles_members(role_keys: List[str], item_keys: List[str], item_type: item_facade.ItemType) -> bool:
+    if item_type == item_facade.ItemType.role:
+        for role_key in role_keys:
+            role_member_keys = get_role_members_flatten(role_key)
+            if set(role_member_keys).intersection(set(item_keys)):
+                return False
     if not delete_roles_members(role_keys, item_keys, item_type):
         return False
-    return item_facade.attach_in_items_to_mains(
+    if item_facade.attach_in_items_to_mains(
         main_keys=role_keys, main_type=item_facade.ItemType.role,
-        attach_keys=item_keys, attach_type=item_type)
+        attach_keys=item_keys, attach_type=item_type):
+        tree = redis_client.get(TreeKey, None)
+        if not tree:
+            tree = defaultdict(lambda: defaultdict(list))
+        if item_type == item_facade.ItemType.role:
+            for role_key in role_keys:
+                tree[role_key][RoleMemberRoleKey].extend(item_keys)
+        if item_type == item_facade.ItemType.role:
+            for role_key in role_keys:
+                tree[role_key][RoleMemberUserKey].extend(item_keys)
+        redis_client.hmset(TreeKey, tree)
+        return True
+    return False
 
 
 def get_roles_members_direct(
@@ -114,16 +133,24 @@ def judge_users_owned_roles(user_keys: List[str], role_keys: List[str]) -> Dict[
                                       attach_keys=role_keys, attach_type=item_facade.ItemType.role)
 
 
-def get_role_members_flatten(role_key: List[str], role_member_keys: List[str], user_member_keys: List[str]) -> Dict[str, List[str]]:
-    now_role_member_keys = get_roles_members_direct(role_keys=[role_key], item_type=item_facade.ItemType.role)[role_key]
-    now_user_keys = get_roles_members_direct(role_keys=[role_key], item_type=item_facade.ItemType.user)[role_key]
-    user_member_keys.extend(now_user_keys)
-    delta_role_member_keys = list(set(now_role_member_keys) - set(role_member_keys))
-    role_member_keys.extend(delta_role_member_keys)
-    for now_role_key in delta_role_member_keys:
-        get_role_members_flatten(now_role_key, role_member_keys, user_member_keys)
-    return {
-        'roles': role_member_keys,
-        'users': user_member_keys
+def get_role_members_flatten(role_key: str, tree: Dict[str, List[str]] = None) -> Dict[str, List[str]]:
+    if not tree:
+        tree = redis_client.hgetall(TreeKey, None)
+        if not tree:
+            raise SystemError('[get_role_members_flatten]: tree is None')
+    now_role_keys = tree[role_key][RoleMemberRoleKey]
+    now_user_keys = tree[role_key][RoleMemberUserKey]
+    all_role_keys = list()
+    all_user_keys = list()
+    for role_key in now_role_keys:
+        temp = get_role_members_flatten(role_key)
+        all_role_keys.extend(temp[RoleMemberRoleKey])
+        all_user_keys.extend(temp[RoleMemberUserKey])
+    all_role_keys.extend(now_role_keys)
+    all_user_keys.extend(now_user_keys)
+    out = {
+        RoleMemberRoleKey: all_role_keys,
+        RoleMemberUserKey: all_user_keys
     }
+    return out
 

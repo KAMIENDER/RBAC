@@ -182,5 +182,5 @@ class RoleMemberFlattenResource(RBACResource):
         for key in keys:
             role_member_keys = list()
             user_member_keys = list()
-            out[key] = role_facade.get_role_members_flatten(keys, role_member_keys, user_member_keys)
+            out[key] = role_facade.get_role_members_flatten(key, role_member_keys, user_member_keys)
         return out, 200
