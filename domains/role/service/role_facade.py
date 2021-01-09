@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from typing import List, Dict, Set
 
@@ -8,7 +9,7 @@ from domains.role.models.role import Role
 from domains.role.repository.role_controller import get_role_controller
 import domains.item.service.item_facade as item_facade
 import domains.user.service.facade as user_facade
-from infrastructure.config.redis import redis_client
+from infrastructure.config.redis import RBACRedis
 
 rc = get_role_controller()
 
@@ -89,6 +90,16 @@ def update_role(role: Role, name: str = None,
 
 
 def delete_roles_members(role_keys: List[str], item_keys: List[str], item_type: item_facade.ItemType) -> bool:
+    tree = RBACRedis.get_str(TreeKey)
+    member_type = RoleMemberUserKey if item_type == item_facade.ItemType.user else RoleMemberRoleKey
+    for role_key in role_keys:
+        mem_keys = tree.get(role_key, {}).get(member_type, list())
+        [mem_keys.remove(x) for x in item_keys if x in mem_keys]
+        if not tree.get(role_key, {}):
+            tree[role_key] = {}
+        tree[role_key][member_type] = mem_keys
+    RBACRedis.set_str(TreeKey, tree)
+
     return item_facade.disable_old_refs(
         main_keys=role_keys, main_type=item_facade.ItemType.role,
         attach_keys=item_keys, attach_type=item_type)
@@ -104,17 +115,15 @@ def set_roles_members(role_keys: List[str], item_keys: List[str], item_type: ite
         return False
     if item_facade.attach_in_items_to_mains(
         main_keys=role_keys, main_type=item_facade.ItemType.role,
-        attach_keys=item_keys, attach_type=item_type):
-        tree = redis_client.get(TreeKey, None)
-        if not tree:
-            tree = defaultdict(lambda: defaultdict(list))
+            attach_keys=item_keys, attach_type=item_type):
+        tree = RBACRedis.get_str(TreeKey) or defaultdict(lambda: defaultdict(list))
         if item_type == item_facade.ItemType.role:
             for role_key in role_keys:
                 tree[role_key][RoleMemberRoleKey].extend(item_keys)
-        if item_type == item_facade.ItemType.role:
+        if item_type == item_facade.ItemType.user:
             for role_key in role_keys:
                 tree[role_key][RoleMemberUserKey].extend(item_keys)
-        redis_client.hmset(TreeKey, tree)
+        RBACRedis.set_str(TreeKey, tree)
         return True
     return False
 
@@ -133,17 +142,15 @@ def judge_users_owned_roles(user_keys: List[str], role_keys: List[str]) -> Dict[
                                       attach_keys=role_keys, attach_type=item_facade.ItemType.role)
 
 
-def get_role_members_flatten(role_key: str, tree: Dict[str, List[str]] = None) -> Dict[str, List[str]]:
+def get_role_members_flatten(role_key: str, tree: Dict[str, Dict[str,List[str]]] = None) -> Dict[str, List[str]]:
     if not tree:
-        tree = redis_client.hgetall(TreeKey, None)
-        if not tree:
-            raise SystemError('[get_role_members_flatten]: tree is None')
-    now_role_keys = tree[role_key][RoleMemberRoleKey]
-    now_user_keys = tree[role_key][RoleMemberUserKey]
+        tree = RBACRedis.get_str(TreeKey)
+    now_role_keys = tree.get(role_key, {}).get(RoleMemberRoleKey) or list()
+    now_user_keys = tree.get(role_key, {}).get(RoleMemberUserKey) or list()
     all_role_keys = list()
     all_user_keys = list()
     for role_key in now_role_keys:
-        temp = get_role_members_flatten(role_key)
+        temp = get_role_members_flatten(role_key, tree)
         all_role_keys.extend(temp[RoleMemberRoleKey])
         all_user_keys.extend(temp[RoleMemberUserKey])
     all_role_keys.extend(now_role_keys)

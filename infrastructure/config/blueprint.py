@@ -3,7 +3,8 @@ from flask_restful import Api
 
 from application.service.attr import AttrBasicResource, AttrRelationResource
 from application.service.permission import PermissionBasicResource, PermissionAuthResource, PermissionUpdateResource
-from application.service.role import RoleResource, RoleUpdateResource, RoleOwnerResource, RoleMemberDirctResource
+from application.service.role import RoleResource, RoleUpdateResource, RoleOwnerResource, RoleMemberDirctResource, \
+    RoleMemberFlattenResource
 from application.service.user import UserResource, UserUpdateResource
 
 
@@ -33,6 +34,7 @@ def register_role(app: Flask, pre_url: str = "/"):
     api.add_resource(RoleUpdateResource, pre_url+'update_role/')
     api.add_resource(RoleOwnerResource, pre_url+'owner/')
     api.add_resource(RoleMemberDirctResource, pre_url+'member/')
+    api.add_resource(RoleMemberFlattenResource, pre_url + 'flatten_member/')
 
 
 def register_attr(app: Flask, pre_url: str = "/"):

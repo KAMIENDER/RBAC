@@ -10,6 +10,7 @@ from domains.role.entity.value import RoleType
 from domains.role.service.role_facade import create_role, get_roles, update_role
 import domains.role.service.role_facade as role_facade
 from infrastructure.config.before_request import RBACResource
+import domains.item.service.item_facade as item_facade
 
 
 class RoleResource(Resource):
@@ -53,10 +54,31 @@ class RoleResource(Resource):
         roles = get_roles(keys=keys, name=name, role_type=role_type, level=level)
         out = list()
         for role in roles:
-            out.append(dict(self.RoleModel.from_orm(role)))
+            out.append({
+                'name': role.name,
+                'extra': role.extra,
+                'id': role.id,
+                'key': role.key,
+                'level': role.level,
+            })
         return {
             'data': out
         }
+
+    def delete(self):
+        keys = request.args.getlist('keys', type=str)
+        if not keys:
+            return {
+                'msg': 'missing params keys'
+            }, 400
+        roles = role_facade.get_roles(keys=keys)
+        if role_facade.delete_roles(roles):
+            return {
+                'msg': 'ok'
+            }, 200
+        return {
+            'msg': 'fail to delete roles'
+        }, 500
 
 
 class RoleUpdateResource(Resource):
@@ -143,12 +165,12 @@ class RoleMemberDirctResource(RBACResource):
                    }, 403
 
         if user_keys and not role_facade.set_roles_members(
-                role_keys=keys, keys=user_keys, item_type=role_facade.item_facade.ItemType.user):
+                role_keys=keys, item_keys=user_keys, item_type=role_facade.item_facade.ItemType.user):
             return {
                        'message': 'set roles members fail'
                    }, 500
         if role_keys and not role_facade.set_roles_members(
-                role_keys=keys, keys=role_keys, item_type=role_facade.item_facade.ItemType.role):
+                role_keys=keys, item_keys=role_keys, item_type=role_facade.item_facade.ItemType.role):
             return {
                        'message': 'set roles members fail'
                    }, 500
@@ -174,13 +196,36 @@ class RoleMemberDirctResource(RBACResource):
             role_keys=keys, item_type=role_facade.item_facade.ItemType.role, disable=disable)
         return out, 200
 
+    def delete(self):
+        args = request.get_json()
+        keys = args.get("keys", [])
+        user_keys = args.get("user_keys", [])
+        role_keys = args.get("role_keys", [])
+        if not keys:
+            return {
+                       'message': 'ok'
+                   }, 200
+        owner_key = request.authorization.username
+        if len(role_facade.judge_users_owned_roles(user_keys=[owner_key], role_keys=keys)[owner_key]) != len(
+                keys) or not keys:
+            return {
+                       'message': 'you are not some roles owner'
+                   }, 403
+        if role_facade.delete_roles_members(role_keys=keys, item_keys=user_keys, item_type=item_facade.ItemType.user) \
+                and \
+                role_facade.delete_roles_members(role_keys=keys, item_keys=role_keys, item_type=item_facade.ItemType.role):
+            return {
+                'msg': 'ok'
+            }, 200
+        return {
+            'msg': 'something wrong'
+        }, 500
+
 
 class RoleMemberFlattenResource(RBACResource):
     def get(self):
-        keys = request.args.get('role_keys', type=list, default=[])
+        keys = request.args.getlist('keys', type=str)
         out = dict()
         for key in keys:
-            role_member_keys = list()
-            user_member_keys = list()
-            out[key] = role_facade.get_role_members_flatten(key, role_member_keys, user_member_keys)
+            out[key] = role_facade.get_role_members_flatten(key)
         return out, 200

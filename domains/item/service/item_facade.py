@@ -243,10 +243,11 @@ def get_items_attached_to_in_items(main_keys: List[str], attach_item_type: ItemT
     attaches = item_controller.get_items(item_type=attach_item_type, ids=attach_ids)
     id_to_attach = {attach.id: attach for attach in attaches}
     main_ids = list(id_to_main.keys())
+    attach_ids = list(id_to_attach.keys())
 
     out = defaultdict(list)
     for ref in refs:
-        if ref.main_id not in main_ids:
+        if ref.main_id not in main_ids or ref.attach_id not in attach_ids:
             continue
         out[id_to_main[ref.main_id].key].append(id_to_attach[ref.attach_id].key)
     return out
@@ -328,6 +329,8 @@ def judge_have_ref(main_keys: List[str], attach_keys: List[str], main_type: Item
     refs = item_controller.get_item_refs(main_items=main_items, attach_items=attach_items, disable=ItemRefDisable.able)
     out = defaultdict(list)
     for ref in refs:
+        if ref.attach_id not in attachid2key.keys():
+            continue
         out[mainid2key[ref.main_id]].append(attachid2key[ref.attach_id])
     return out
 

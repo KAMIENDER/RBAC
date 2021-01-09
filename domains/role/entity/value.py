@@ -10,6 +10,6 @@ class RoleDisable(Enum):
     disable = 1
 
 
-TreeKey = 'roleMember.key'
+TreeKey = 'roleMember.key.'
 RoleMemberRoleKey = 'role_keys'
 RoleMemberUserKey = 'user_keys'
