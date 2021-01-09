@@ -221,10 +221,11 @@ def get_items_have_in_items(attach_keys: List[str], attach_item_type: ItemType, 
     mains = item_controller.get_items(item_type=main_item_type, ids=main_ids)
     id_to_main = {main.id: main for main in mains}
     attach_ids = list(id_to_attach.keys())
+    main_ids = list(id_to_main.keys())
 
     out = defaultdict(list)
     for ref in refs:
-        if ref.attach_id not in attach_ids:
+        if ref.attach_id not in attach_ids or ref.main_id not in main_ids:
             continue
         out[id_to_attach[ref.attach_id].key].append(id_to_main[ref.main_id].key)
     return out

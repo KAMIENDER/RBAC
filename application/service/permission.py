@@ -65,7 +65,7 @@ class PermissionBasicResource(Resource):
         try:
             out = list()
             if owner_keys:
-                owner_permissions = get_permissions_items_ownerd(item_type=ItemType.user, user_keys=owner_keys, disable=disable)
+                owner_permissions = get_permissions_items_ownerd(item_type=ItemType.user, item_keys=owner_keys, disable=disable)
                 permission_keys.extend([permission.key for permission in owner_permissions])
             permissions = get_permissions(
                 keys=permission_keys, name=permission_name, level=permission_level, disable=disable)
@@ -92,15 +92,15 @@ class PermissionAuthResource(RBACResource):
             disable = args.get('permission_disable', type=int)
             out = list()
             if user_keys:
-                had_permissions = get_permissions_items_had(item_type=ItemType.user, user_keys=user_keys, disable=disable)
+                had_permissions = get_permissions_items_had(item_type=ItemType.user, item_keys=user_keys, disable=disable)
                 permission_keys.extend([permission.key for permission in had_permissions])
-                owner_permissions = get_permissions_items_ownerd(item_type=ItemType.user, user_keys=user_keys, disable=disable)
+                owner_permissions = get_permissions_items_ownerd(item_type=ItemType.user, item_keys=user_keys, disable=disable)
                 permission_keys.extend([permission.key for permission in owner_permissions])
             if role_keys:
-                had_permissions = get_permissions_items_had(item_type=ItemType.role, user_keys=role_keys,
+                had_permissions = get_permissions_items_had(item_type=ItemType.role, item_keys=role_keys,
                                                             disable=disable)
                 permission_keys.extend([permission.key for permission in had_permissions])
-                owner_permissions = get_permissions_items_ownerd(item_type=ItemType.role, user_keys=role_keys,
+                owner_permissions = get_permissions_items_ownerd(item_type=ItemType.role, item_keys=role_keys,
                                                                  disable=disable)
                 permission_keys.extend([permission.key for permission in owner_permissions])
             permissions = get_permissions(
