@@ -1,3 +1,10 @@
 ply
 gunicorn
 redis
+flask
+flask-migrate
+flask-script
+mysql
+mysql-connector
+flask-restful
+pydantic
