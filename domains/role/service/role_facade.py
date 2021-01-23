@@ -90,7 +90,7 @@ def update_role(role: Role, name: str = None,
 
 
 def delete_roles_members(role_keys: List[str], item_keys: List[str], item_type: item_facade.ItemType) -> bool:
-    tree = RBACRedis.get_str(TreeKey)
+    tree = RBACRedis.get_str(TreeKey) if RBACRedis.get_str(TreeKey) else {}
     member_type = RoleMemberUserKey if item_type == item_facade.ItemType.user else RoleMemberRoleKey
     for role_key in role_keys:
         mem_keys = tree.get(role_key, {}).get(member_type, list())
@@ -144,7 +144,7 @@ def judge_users_owned_roles(user_keys: List[str], role_keys: List[str]) -> Dict[
 
 def get_role_members_flatten(role_key: str, tree: Dict[str, Dict[str,List[str]]] = None) -> Dict[str, List[str]]:
     if not tree:
-        tree = RBACRedis.get_str(TreeKey)
+        tree = RBACRedis.get_str(TreeKey) if RBACRedis.get_str(TreeKey) else {}
     now_role_keys = tree.get(role_key, {}).get(RoleMemberRoleKey) or list()
     now_user_keys = tree.get(role_key, {}).get(RoleMemberUserKey) or list()
     all_role_keys = list()
