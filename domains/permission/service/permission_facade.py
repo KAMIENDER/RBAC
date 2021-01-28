@@ -73,6 +73,13 @@ def set_permissions_owners(permission_keys: List[str], owner_keys: List[str]) ->
         user_keys=[owner.key for owner in owners], permission_keys=permission_keys)
 
 
+def get_permission_owners(permission_keys: List[str]) -> Dict[str, List[str]]:
+    if not permission_keys:
+        return {}
+    return item_facade.get_items_have_in_items(attach_keys=permission_keys, attach_item_type=ItemType.permission,
+                                               main_item_type=ItemType.user)
+
+
 def delete_permissions_owners(permission_keys: List[str], owner_keys: List[str]) -> bool:
     return item_facade.delete_roles_or_users_owned_permissions(
         permission_keys=permission_keys, user_keys=owner_keys)

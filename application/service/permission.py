@@ -180,3 +180,19 @@ class PermissionUpdateResource(RBACResource):
             'message': 'ok'
         }, 200
 
+
+class PermissionOwnerResource(RBACResource):
+    def get(self):
+        args = request.args
+        permission_keys = args.getlist("permission_keys", type=str)
+        owner_key = request.authorization.username
+        temp = judge_permissions_items_owned(permission_keys, [owner_key], ItemType.user)
+        test = temp[owner_key]
+        if not permission_keys or len(test) != len(permission_keys):
+            return {
+                       'message': 'you are not some permissions owner'
+                   }, 403
+        out = get_permission_owners(permission_keys=permission_keys)
+        return {
+            'data': out
+        }, 200
