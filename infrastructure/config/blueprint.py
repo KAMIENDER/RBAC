@@ -3,7 +3,7 @@ from flask_restful import Api
 
 from application.service.attr import AttrBasicResource, AttrRelationResource
 from application.service.permission import PermissionBasicResource, PermissionAuthResource, PermissionUpdateResource, \
-    PermissionOwnerResource, PermissionAuthFlattenResource
+    PermissionOwnerResource, PermissionAuthFlattenResource, PermissionItemHadFlattenResource, PermissionItemHadResource
 from application.service.role import RoleResource, RoleUpdateResource, RoleOwnerResource, RoleMemberDirctResource, \
     RoleMemberFlattenResource, RoleMemberBeLongResource, RoleMemberBeLongFlattenResource
 from application.service.user import UserResource, UserUpdateResource
@@ -29,6 +29,8 @@ def register_permission(app: Flask, pre_url: str = '/'):
     api.add_resource(PermissionUpdateResource, pre_url + 'update/')
     api.add_resource(PermissionOwnerResource, pre_url + "owner/")
     api.add_resource(PermissionAuthFlattenResource, pre_url + "auth/flatten/")
+    api.add_resource(PermissionItemHadFlattenResource, pre_url + 'item/flatten/')
+    api.add_resource(PermissionItemHadResource, pre_url + 'item/')
 
 
 def register_role(app: Flask, pre_url: str = "/"):

@@ -125,3 +125,26 @@ def judge_permissions_items_owned(permission_keys: List[str], item_keys: List[st
         -> Dict[str, List[str]]:
     return item_facade.judge_have_ref(
         main_keys=item_keys, main_type=item_type, attach_keys=permission_keys, attach_type=ItemType.permission)
+
+
+def get_flatten_items_had_permission(permission_key: str) -> Dict[str, List[str]]:
+    out = get_items_had_permission(permission_key)
+    role_keys = [key for key in out[ItemType.item_type2tree_key(ItemType.role)]]
+    user_keys = [key for key in out[ItemType.item_type2tree_key(ItemType.user)]]
+    for role_key in out[ItemType.item_type2tree_key(ItemType.role)]:
+        all_members = role_facade.get_role_members_flatten(role_key=role_key)
+        role_keys.extend(all_members[ItemType.item_type2tree_key(ItemType.role)])
+        user_keys.extend(all_members[ItemType.item_type2tree_key(ItemType.user)])
+    return {
+        ItemType.item_type2tree_key(ItemType.role): role_keys,
+        ItemType.item_type2tree_key(ItemType.user): user_keys
+    }
+
+
+def get_items_had_permission(permission_key: str) -> Dict[str, List[str]]:
+    out_types = [ItemType.user, ItemType.role]
+    out = dict()
+    for tmp_type in out_types:
+        out[ItemType.item_type2tree_key(tmp_type)] = item_facade.get_items_attached_to_in_items(
+            main_keys=[permission_key], main_item_type=ItemType.permission, attach_item_type=tmp_type)[permission_key]
+    return out

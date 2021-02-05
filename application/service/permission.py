@@ -213,3 +213,31 @@ class PermissionAuthFlattenResource(RBACResource):
                    }, 500
         return out, 200
 
+
+class PermissionItemHadFlattenResource(RBACResource):
+    def get(self):
+        args = request.args
+        try:
+            key = args.get("permission_key", type=str)
+            out = get_flatten_items_had_permission(key)
+        except Exception as e:
+            logging.error(f"permission flatten auth api error: {e}")
+            return {
+                       'messgae': 'some thing error'
+                   }, 500
+        return out, 200
+
+
+class PermissionItemHadResource(RBACResource):
+    def get(self):
+        args = request.args
+        try:
+            key = args.get("permission_key", type=str)
+            out = get_items_had_permission(key)
+        except Exception as e:
+            logging.error(f"permission flatten auth api error: {e}")
+            return {
+                       'messgae': 'some thing error'
+                   }, 500
+        return out, 200
+
