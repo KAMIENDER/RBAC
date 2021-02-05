@@ -178,14 +178,14 @@ def get_role_members_flatten(role_key: str, tree: Dict[str, Dict[str,List[str]]]
 
 
 def get_direct_roles_items_in(
-        item_keys: List[str], item_type: item_facade.ItemType) -> List[str]:
+        item_keys: List[str], item_type: item_facade.ItemType) -> Dict[str, List[str]]:
     return item_facade.get_items_have_in_items(
         attach_keys=item_keys, attach_item_type=item_type, main_item_type=item_facade.ItemType.role)
 
 
 def get_flatten_roles_item_in(
         item_key: str, item_type: item_facade.ItemType, tree: List[str] = None)\
-        -> Dict[str, List[str]]:
+        -> List[str]:
     if not tree:
         tree = RBACRedis.get_str(BelongTreeKey) \
             if RBACRedis.get_str(BelongTreeKey) else defaultdict(lambda: defaultdict(list))

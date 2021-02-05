@@ -3,6 +3,7 @@ from domains.permission.entity.const import PermissionDisable
 from domains.permission.repository.permission_contoller import get_permission_controller
 import domains.item.service.item_facade as item_facade
 import domains.user.service.facade as user_facade
+from domains.role.service import role_facade
 
 pc = get_permission_controller()
 
@@ -51,14 +52,29 @@ def get_permissions_items_ownerd(item_type: item_facade.ItemType, item_keys: Lis
     return permissions
 
 
-def get_permissions_items_had(item_type: item_facade.ItemType, item_keys: List[str] = [], disable: PermissionDisable = None):
+def get_permissions_items_had(keys: List[str], item_type: ItemType) -> List[str]:
+    permission_keys = list()
+    had_permissions = get_permissions_items_had_in(item_type=item_type, item_keys=keys)
+    permission_keys.extend(had_permissions)
+    owner_permissions = get_permissions_items_ownerd(item_type=item_type, item_keys=keys)
+    permission_keys.extend(owner_permissions)
+    return permission_keys
+
+
+def get_flatten_permissions_item_had(key: str, item_type: ItemType):
+    all_role_keys = role_facade.get_flatten_roles_item_in(item_key=key, item_type=item_type)
+    permission_keys = get_permissions_items_had(item_type=item_type, keys=[key])
+    permission_keys.extend(get_permissions_items_had(keys=all_role_keys, item_type=ItemType.role))
+    return permission_keys
+
+
+def get_permissions_items_had_in(item_type: item_facade.ItemType, item_keys: List[str] = []):
     item_key2permission_key = get_items_have_in_items(
         attach_keys=item_keys, attach_item_type=item_type, main_item_type=ItemType.permission)
     permission_keys = list()
-    for _, permission_keys in item_key2permission_key.items():
-        permission_keys.extend(permission_keys)
-    permissions = get_permissions(keys=permission_keys, disable=disable)
-    return permissions
+    for _, keys in item_key2permission_key.items():
+        permission_keys.extend(keys)
+    return permission_keys
 
 
 def set_permissions_owners(permission_keys: List[str], owner_keys: List[str]) -> bool:

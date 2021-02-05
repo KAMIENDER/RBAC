@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from domains.permission.service.permission_facade import *
 from infrastructure.config.before_request import RBACResource
-
+import domains.role.service.role_facade as role_facade
 
 class PermissionModel(BaseModel):
     id: int
@@ -92,17 +92,11 @@ class PermissionAuthResource(RBACResource):
             disable = args.get('permission_disable', type=int)
             out = list()
             if user_keys:
-                had_permissions = get_permissions_items_had(item_type=ItemType.user, item_keys=user_keys, disable=disable)
-                permission_keys.extend([permission.key for permission in had_permissions])
-                owner_permissions = get_permissions_items_ownerd(item_type=ItemType.user, item_keys=user_keys, disable=disable)
-                permission_keys.extend([permission.key for permission in owner_permissions])
+                user_permission_keys = get_permissions_items_had(item_type=ItemType.user, keys=user_keys)
+                permission_keys.extend(user_permission_keys)
             if role_keys:
-                had_permissions = get_permissions_items_had(item_type=ItemType.role, item_keys=role_keys,
-                                                            disable=disable)
-                permission_keys.extend([permission.key for permission in had_permissions])
-                owner_permissions = get_permissions_items_ownerd(item_type=ItemType.role, item_keys=role_keys,
-                                                                 disable=disable)
-                permission_keys.extend([permission.key for permission in owner_permissions])
+                role_permission_keys = get_permissions_items_had(item_type=ItemType.role, keys=role_keys)
+                permission_keys.extend(role_permission_keys)
             permissions = get_permissions(
                 keys=permission_keys, name=permission_name, level=permission_level, disable=disable)
             for permission in permissions:
@@ -196,3 +190,26 @@ class PermissionOwnerResource(RBACResource):
         return {
             'data': out
         }, 200
+
+
+class PermissionAuthFlattenResource(RBACResource):
+    def get(self):
+        args = request.args
+        try:
+            user_keys = args.getlist("user_keys", type=str)
+            role_keys = args.getlist("role_keys", type=str)
+            out = {}
+            out[ItemType.item_type2tree_key(ItemType.user)], out[ItemType.item_type2tree_key(ItemType.role)] = {}, {}
+            for key in user_keys:
+                out[ItemType.item_type2tree_key(ItemType.user)][key] = \
+                    get_flatten_permissions_item_had(key=key, item_type=ItemType.user)
+            for key in role_keys:
+                out[ItemType.item_type2tree_key(ItemType.role)][key] = \
+                    get_flatten_permissions_item_had(key=key, item_type=ItemType.role)
+        except Exception as e:
+            logging.error(f"permission flatten auth api error: {e}")
+            return {
+                       'messgae': 'some thing error'
+                   }, 500
+        return out, 200
+
