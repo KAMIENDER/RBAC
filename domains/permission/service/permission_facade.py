@@ -1,5 +1,3 @@
-from typing import List
-
 from domains.item.service.item_facade import *
 from domains.permission.entity.const import PermissionDisable
 from domains.permission.repository.permission_contoller import get_permission_controller
@@ -94,7 +92,6 @@ def clear_permission_owners(permission_keys: List[str]) -> bool:
 
 
 def update_permissions_owners(permission_keys: List[str], owner_keys: List[str]) -> bool:
-    tets = clear_permission_owners(permission_keys)
     return  set_permissions_owners(permission_keys, owner_keys)
 
 

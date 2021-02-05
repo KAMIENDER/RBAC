@@ -5,7 +5,7 @@ from application.service.attr import AttrBasicResource, AttrRelationResource
 from application.service.permission import PermissionBasicResource, PermissionAuthResource, PermissionUpdateResource, \
     PermissionOwnerResource
 from application.service.role import RoleResource, RoleUpdateResource, RoleOwnerResource, RoleMemberDirctResource, \
-    RoleMemberFlattenResource
+    RoleMemberFlattenResource, RoleMemberBeLongResource, RoleMemberBeLongFlattenResource
 from application.service.user import UserResource, UserUpdateResource
 
 
@@ -37,6 +37,8 @@ def register_role(app: Flask, pre_url: str = "/"):
     api.add_resource(RoleOwnerResource, pre_url+'owner/')
     api.add_resource(RoleMemberDirctResource, pre_url+'member/')
     api.add_resource(RoleMemberFlattenResource, pre_url + 'flatten_member/')
+    api.add_resource(RoleMemberBeLongResource, pre_url + 'belong_role/direct/')
+    api.add_resource(RoleMemberBeLongFlattenResource, pre_url + 'belong_role/flatten/')
 
 
 def register_attr(app: Flask, pre_url: str = "/"):

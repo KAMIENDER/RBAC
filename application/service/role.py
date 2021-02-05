@@ -134,6 +134,12 @@ class RoleOwnerResource(Resource):
             keys = args.get("keys")
             owner_keys = args.get("owner_keys")
             roles = role_facade.get_roles(keys=keys)
+            user = request.authorization.username
+            for role_key, owner_keys in role_facade.get_roles_owners(roles).items():
+                if user not in owner_keys:
+                    return {
+                        'message': 'not owner of ' + role_key
+                    }, 403
             if role_facade.update_roles_owners(roles, owner_keys):
                 return {
                            'message': "ok"
@@ -143,8 +149,8 @@ class RoleOwnerResource(Resource):
                    }, 500
         except Exception as e:
             return {
-                       'message': f"something error: {e}"
-                   }, 500
+                       'message': f"params something error: {e}"
+                   }, 400
 
 
 class RoleMemberDirctResource(RBACResource):
@@ -228,4 +234,27 @@ class RoleMemberFlattenResource(RBACResource):
         out = dict()
         for key in keys:
             out[key] = role_facade.get_role_members_flatten(key)
+        return out, 200
+
+
+class RoleMemberBeLongResource(RBACResource):
+    def get(self):
+        user_keys = request.args.getlist('user_keys', type=str)
+        role_keys = request.args.getlist('role_keys', type=str)
+        out = dict()
+        out['user'] = role_facade.get_direct_roles_items_in(user_keys, item_type=item_facade.ItemType.user)
+        out['role'] = role_facade.get_direct_roles_items_in(role_keys, item_type=item_facade.ItemType.role)
+        return out, 200
+
+
+class RoleMemberBeLongFlattenResource(RBACResource):
+    def get(self):
+        user_keys = request.args.getlist('user_keys', type=str)
+        role_keys = request.args.getlist('role_keys', type=str)
+        out = dict()
+        out['user'], out['role'] = dict(), dict()
+        for key in user_keys:
+            out['user'][key] = role_facade.get_flatten_roles_item_in(item_key=key, item_type=item_facade.ItemType.user)
+        for key in role_keys:
+            out['role'][key] = role_facade.get_flatten_roles_item_in(item_key=key, item_type=item_facade.ItemType.role)
         return out, 200

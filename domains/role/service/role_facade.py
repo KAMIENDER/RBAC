@@ -4,7 +4,8 @@ from typing import List, Dict, Set
 
 from pydantic.main import BaseModel
 
-from domains.role.entity.value import RoleType, RoleDisable, TreeKey, RoleMemberRoleKey, RoleMemberUserKey
+from domains.role.entity.value import RoleType, RoleDisable, TreeKey, RoleMemberRoleKey, RoleMemberUserKey, \
+    BelongTreeKey
 from domains.role.models.role import Role
 from domains.role.repository.role_controller import get_role_controller
 import domains.item.service.item_facade as item_facade
@@ -91,6 +92,7 @@ def update_role(role: Role, name: str = None,
 
 def delete_roles_members(role_keys: List[str], item_keys: List[str], item_type: item_facade.ItemType) -> bool:
     tree = RBACRedis.get_str(TreeKey) if RBACRedis.get_str(TreeKey) else {}
+    belong_tree = RBACRedis.get_str(BelongTreeKey) or defaultdict(lambda: defaultdict(list))
     member_type = RoleMemberUserKey if item_type == item_facade.ItemType.user else RoleMemberRoleKey
     for role_key in role_keys:
         mem_keys = tree.get(role_key, {}).get(member_type, list())
@@ -98,7 +100,14 @@ def delete_roles_members(role_keys: List[str], item_keys: List[str], item_type: 
         if not tree.get(role_key, {}):
             tree[role_key] = {}
         tree[role_key][member_type] = mem_keys
+    for item_key in item_keys:
+        ori_role_keys = belong_tree.get(member_type, defaultdict(list)).get(item_key, list())
+        [ori_role_keys.remove(x) for x in role_keys if x in ori_role_keys]
+        if not belong_tree.get(member_type, {}):
+            belong_tree[member_type] = {}
+        belong_tree[member_type][item_key] = ori_role_keys
     RBACRedis.set_str(TreeKey, tree)
+    RBACRedis.set_str(BelongTreeKey, belong_tree)
 
     return item_facade.disable_old_refs(
         main_keys=role_keys, main_type=item_facade.ItemType.role,
@@ -117,12 +126,18 @@ def set_roles_members(role_keys: List[str], item_keys: List[str], item_type: ite
         main_keys=role_keys, main_type=item_facade.ItemType.role,
             attach_keys=item_keys, attach_type=item_type):
         tree = RBACRedis.get_str(TreeKey) or defaultdict(lambda: defaultdict(list))
+        belong_tree = RBACRedis.get_str(BelongTreeKey) or defaultdict(lambda: defaultdict(list))
         if item_type == item_facade.ItemType.role:
             for role_key in role_keys:
                 tree[role_key][RoleMemberRoleKey].extend(item_keys)
+            for item_key in item_keys:
+                belong_tree[RoleMemberRoleKey][item_key].extend(role_keys)
         if item_type == item_facade.ItemType.user:
             for role_key in role_keys:
                 tree[role_key][RoleMemberUserKey].extend(item_keys)
+            for item_key in item_keys:
+                belong_tree[RoleMemberUserKey][item_key].extend(role_keys)
+        RBACRedis.set_str(BelongTreeKey, belong_tree)
         RBACRedis.set_str(TreeKey, tree)
         return True
     return False
@@ -161,3 +176,23 @@ def get_role_members_flatten(role_key: str, tree: Dict[str, Dict[str,List[str]]]
     }
     return out
 
+
+def get_direct_roles_items_in(
+        item_keys: List[str], item_type: item_facade.ItemType) -> List[str]:
+    return item_facade.get_items_have_in_items(
+        attach_keys=item_keys, attach_item_type=item_type, main_item_type=item_facade.ItemType.role)
+
+
+def get_flatten_roles_item_in(
+        item_key: str, item_type: item_facade.ItemType, tree: List[str] = None)\
+        -> Dict[str, List[str]]:
+    if not tree:
+        tree = RBACRedis.get_str(BelongTreeKey) \
+            if RBACRedis.get_str(BelongTreeKey) else defaultdict(lambda: defaultdict(list))
+    now_role_keys = tree.get(item_facade.ItemType.item_type2tree_key(item_type)).get(item_key) or list()
+    all_role_keys = list()
+    for role_key in now_role_keys:
+        temp = get_flatten_roles_item_in(role_key, tree=tree, item_type=item_facade.ItemType.role)
+        all_role_keys.extend(temp)
+    all_role_keys.extend(now_role_keys)
+    return all_role_keys

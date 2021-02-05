@@ -2,6 +2,7 @@ import json
 import logging
 
 import redis
+import gunicorn
 
 from infrastructure.config.flask import app
 
