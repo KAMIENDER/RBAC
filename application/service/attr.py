@@ -89,8 +89,8 @@ class AttrRelationResource(Resource):
             user_keys = args.get('user_keys') or None
             role_keys = args.get('role_keys') or None
             permission_keys = args.get('permission_keys') or None
-            value = args.get('value') or None
-            if not attr_keys or not (user_keys or role_keys or permission_keys) or not value:
+            value = args.get('value', None)
+            if not attr_keys or not (user_keys or role_keys or permission_keys) or value is None:
                 return {
                            'message': 'need more args'
                        }, 403

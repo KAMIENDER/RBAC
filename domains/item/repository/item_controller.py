@@ -117,7 +117,7 @@ class ItemController(object):
             new_item_refs = list()
             for attach_item in attach_items:
                 new_item_ref = ItemRef(main_id=main_item.id, attach_id=attach_item.id, disable=ItemRefDisable.able.value)
-                if extra:
+                if extra is not None:
                     new_item_ref.extra = extra
                 new_item_refs.append(new_item_ref)
                 self.session.add(new_item_ref)

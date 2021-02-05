@@ -66,6 +66,10 @@ class BaseNode(object):
     def get_extra(self, key: str):
         return self._extra.get(key, None)
 
+    @property
+    def extra(self):
+        return self.extra
+
 
 class Num(BaseNode):
     def __init__(self, value):

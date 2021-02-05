@@ -22,11 +22,11 @@ def get_attrs_by_key(like_key: str = None, keys: List[str] = None, disable: Attr
 def get_items_by_attr(expression: str, item_type: ItemType, disable: ItemDisable.able = None) -> List[Item]:
     try:
         service = SyntaxAnalyzeServiceSupplier(expression)
-        sql = service.convert_to_sql()
+        service.convert_to_sql()
     except Exception as e:
         logging.error(f"[get_item_by_expression]analyze expression err: {e}")
         return list()
-    return item_facade.get_items_by_statement(sql, item_type, disable)
+    return item_facade.get_items_by_statement(service.tree, item_type, disable)
 
 
 def set_attrs_to_items(item_keys: List[str], item_type: ItemType, attr_keys: List[str], value) -> bool:
