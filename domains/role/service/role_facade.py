@@ -120,6 +120,11 @@ def set_roles_members(role_keys: List[str], item_keys: List[str], item_type: ite
             role_member_keys = get_role_members_flatten(role_key)
             if set(role_member_keys).intersection(set(item_keys)):
                 return False
+    for role_key in role_keys:
+        belong_role_keys = get_flatten_roles_item_in(item_key=role_key, item_type=item_facade.ItemType.role)
+        can_not_keys = [key for key in item_keys if key in belong_role_keys]
+        if can_not_keys:
+            return False
     if not delete_roles_members(role_keys, item_keys, item_type):
         return False
     if item_facade.attach_in_items_to_mains(
