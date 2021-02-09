@@ -66,21 +66,26 @@ class AttrRelationResource(Resource):
         user_keys = list()
         role_keys = list()
         permission_keys = list()
-        if is_user:
-            user_keys = [user.key for user in
-                         attr_facade.get_items_by_attr(expression=expression, item_type=ItemType.user, disable=disable)]
-        if is_role:
-            role_keys = [role.key for role in
-                         attr_facade.get_items_by_attr(expression=expression, item_type=ItemType.role, disable=disable)]
-        if is_permission:
-            permission_keys = [permission.key for permission in
-                               attr_facade.get_items_by_attr(expression=expression, item_type=ItemType.permission,
-                                                             disable=disable)]
-        return {
-                   'user_keys': user_keys,
-                   'role_keys': role_keys,
-                   'permission_keys': permission_keys
-               }, 200
+        try:
+            if is_user:
+                user_keys = [user.key for user in
+                             attr_facade.get_items_by_attr(expression=expression, item_type=ItemType.user, disable=disable)]
+            if is_role:
+                role_keys = [role.key for role in
+                             attr_facade.get_items_by_attr(expression=expression, item_type=ItemType.role, disable=disable)]
+            if is_permission:
+                permission_keys = [permission.key for permission in
+                                   attr_facade.get_items_by_attr(expression=expression, item_type=ItemType.permission,
+                                                                 disable=disable)]
+            return {
+                       'user_keys': user_keys,
+                       'role_keys': role_keys,
+                       'permission_keys': permission_keys
+                   }, 200
+        except Exception as e:
+            return {
+                'message': f"query error: {e}"
+            }, 400
 
     def post(self):
         args = request.get_json()

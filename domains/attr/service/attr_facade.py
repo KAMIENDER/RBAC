@@ -25,6 +25,7 @@ def get_items_by_attr(expression: str, item_type: ItemType, disable: ItemDisable
         service.convert_to_sql()
     except Exception as e:
         logging.error(f"[get_item_by_expression]analyze expression err: {e}")
+        raise Exception(f"[get_item_by_expression]analyze expression err: {e}")
         return list()
     return item_facade.get_items_by_statement(service.tree, item_type, disable)
 
